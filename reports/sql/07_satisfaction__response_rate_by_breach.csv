@@ -1,0 +1,3 @@
+sla_breached,resolved,responses,response_rate_pct,mean_score
+False,41510,11755,28.3,4.23
+True,7732,2157,27.9,2.68

@@ -1,0 +1,4 @@
+arrival_window,tickets,share_of_tickets_pct,breach_rate_pct,share_of_breaches_pct
+weekday_after_hours,8303,16.5,30.7,32.2
+weekday_staffed,37748,75.1,11.8,56.5
+weekend_or_holiday,4244,8.4,21.1,11.3

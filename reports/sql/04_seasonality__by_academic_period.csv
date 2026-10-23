@@ -1,0 +1,5 @@
+academic_period,days,tickets,tickets_per_day,breach_rate_pct
+semester_start,56,6401,114.3,18.9
+regular,440,33995,77.3,16.2
+summer,200,8899,44.5,12.2
+winter_break,35,1000,28.6,9.8

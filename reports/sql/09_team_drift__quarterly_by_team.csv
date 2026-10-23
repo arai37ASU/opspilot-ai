@@ -1,0 +1,57 @@
+team,quarter,resolved,breach_rate_pct,change_vs_year_before_pts
+Classroom Technology,2024-01-01,439,20.5,
+Classroom Technology,2024-04-01,208,12.0,
+Classroom Technology,2024-07-01,336,21.1,
+Classroom Technology,2024-10-01,337,15.1,
+Classroom Technology,2025-01-01,450,17.6,-2.9
+Classroom Technology,2025-04-01,222,11.3,-0.8
+Classroom Technology,2025-07-01,303,19.5,-1.7
+Classroom Technology,2025-10-01,349,14.0,-1.1
+Desktop Support,2024-01-01,1207,18.1,
+Desktop Support,2024-04-01,1078,15.0,
+Desktop Support,2024-07-01,1114,18.3,
+Desktop Support,2024-10-01,1253,18.8,
+Desktop Support,2025-01-01,1353,19.3,1.2
+Desktop Support,2025-04-01,1039,24.8,9.8
+Desktop Support,2025-07-01,1145,17.2,-1.1
+Desktop Support,2025-10-01,1182,20.4,1.6
+Enterprise Applications,2024-01-01,1181,26.5,
+Enterprise Applications,2024-04-01,958,22.1,
+Enterprise Applications,2024-07-01,1053,25.5,
+Enterprise Applications,2024-10-01,1072,23.3,
+Enterprise Applications,2025-01-01,1168,26.5,0.0
+Enterprise Applications,2025-04-01,965,23.2,1.1
+Enterprise Applications,2025-07-01,1006,20.6,-4.9
+Enterprise Applications,2025-10-01,1108,25.5,2.1
+Identity & Access,2024-01-01,1121,14.7,
+Identity & Access,2024-04-01,822,12.2,
+Identity & Access,2024-07-01,1011,15.0,
+Identity & Access,2024-10-01,954,11.3,
+Identity & Access,2025-01-01,1115,13.8,-0.9
+Identity & Access,2025-04-01,779,10.4,-1.8
+Identity & Access,2025-07-01,1006,12.5,-2.5
+Identity & Access,2025-10-01,979,10.6,-0.7
+Network Operations,2024-01-01,977,30.2,
+Network Operations,2024-04-01,764,22.1,
+Network Operations,2024-07-01,766,23.6,
+Network Operations,2024-10-01,901,26.1,
+Network Operations,2025-01-01,948,24.2,-6.0
+Network Operations,2025-04-01,743,21.3,-0.9
+Network Operations,2025-07-01,799,24.7,1.0
+Network Operations,2025-10-01,934,27.7,1.6
+Security Operations,2024-01-01,344,12.2,
+Security Operations,2024-04-01,314,11.8,
+Security Operations,2024-07-01,305,10.5,
+Security Operations,2024-10-01,291,14.4,
+Security Operations,2025-01-01,411,19.0,6.8
+Security Operations,2025-04-01,279,15.8,4.0
+Security Operations,2025-07-01,268,15.7,5.2
+Security Operations,2025-10-01,321,16.5,2.1
+Service Desk,2024-01-01,1621,3.2,
+Service Desk,2024-04-01,1279,3.6,
+Service Desk,2024-07-01,1473,2.7,
+Service Desk,2024-10-01,1498,3.5,
+Service Desk,2025-01-01,1614,3.3,0.1
+Service Desk,2025-04-01,1230,3.0,-0.6
+Service Desk,2025-07-01,1387,2.7,0.0
+Service Desk,2025-10-01,1462,2.7,-0.8

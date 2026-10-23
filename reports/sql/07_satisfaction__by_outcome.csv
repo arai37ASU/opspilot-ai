@@ -1,0 +1,5 @@
+sla_breached,reopened,responses,mean_score,low_score_pct
+False,False,11296,4.28,1.9
+False,True,459,3.10,28.5
+True,False,1729,2.85,38.7
+True,True,428,2.01,78.7

@@ -25,6 +25,11 @@ analysis = [
     "matplotlib>=3.9",
     "scipy>=1.13",
 ]
+# Training and evaluating the SLA breach model.
+modeling = [
+    "scikit-learn>=1.5",
+    "xgboost>=2.1",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

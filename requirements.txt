@@ -1,1 +1,1 @@
--e .[dev,analysis]
+-e .[dev,analysis,modeling]

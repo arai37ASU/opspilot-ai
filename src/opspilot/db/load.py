@@ -44,6 +44,12 @@ def load_dataset(conn: psycopg.Connection, data_dir: Path) -> dict[str, int]:
 
     Commits only if every table loads and its row count matches the CSV.
     """
+    # Inside an open transaction, conn.transaction() would only create a
+    # savepoint: nothing would commit, and the lock taken by DROP TABLE would
+    # be held until the caller ended its transaction.
+    if conn.info.transaction_status != psycopg.pq.TransactionStatus.IDLE:
+        raise RuntimeError("load_dataset needs a connection with no open transaction (commit first or use autocommit)")
+
     missing = [table for table in TABLES if not (data_dir / f"{table}.csv").exists()]
     if missing:
         raise FileNotFoundError(f"missing CSV files in {data_dir}: {missing}. Run the generator first.")

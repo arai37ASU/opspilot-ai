@@ -33,10 +33,14 @@ def data_dir(tmp_path_factory):
 def db_conn(test_database_url, data_dir):
     """A connection to the test database with the dataset loaded.
 
+    Autocommit, so reads never leave a transaction open (which would hold
+    locks other sessions, such as a notebook kernel, have to wait for), and
+    `conn.transaction()` starts a real transaction rather than a savepoint.
+
     Tests that change data must do it inside
     `db_conn.transaction(force_rollback=True)` so other tests see the
     original rows.
     """
-    with psycopg.connect(test_database_url) as conn:
+    with psycopg.connect(test_database_url, autocommit=True) as conn:
         load_dataset(conn, data_dir)
         yield conn

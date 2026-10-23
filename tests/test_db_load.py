@@ -43,6 +43,13 @@ def test_failed_load_leaves_previous_data_in_place(db_conn, data_dir, tmp_path):
     assert table_count(db_conn, "tickets") == before
 
 
+def test_load_refuses_a_connection_with_an_open_transaction(test_database_url, data_dir):
+    with psycopg.connect(test_database_url) as conn:
+        conn.execute("SELECT 1")  # psycopg opens a transaction implicitly
+        with pytest.raises(RuntimeError, match="open transaction"):
+            load_dataset(conn, data_dir)
+
+
 def test_missing_csv_is_reported(db_conn, tmp_path):
     with pytest.raises(FileNotFoundError):
         load_dataset(db_conn, tmp_path)

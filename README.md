@@ -12,8 +12,9 @@ Built so far:
 - SQL data-quality checks with a command-line runner (`sql/checks/`)
 - Business analysis queries with saved results (`sql/analysis/`, `reports/sql/`), written up in [docs/sql_analysis.md](docs/sql_analysis.md)
 - A leakage-safe feature view for SLA breach prediction (`sql/features/`), built by the loader
+- Exploratory analysis notebooks (`notebooks/`), written up in [docs/eda_findings.md](docs/eda_findings.md), ending in a recorded plan for the SLA breach model
 
-Not built yet: EDA, ML models, API, dashboard, AI insight layer, deployment.
+Not built yet: ML models, API, dashboard, AI insight layer, deployment.
 
 ## Setup
 
@@ -64,6 +65,16 @@ Run the business analysis queries in [sql/analysis/](sql/analysis/) and save eac
 ```bash
 python -m opspilot.db.analysis --output-dir reports/sql
 ```
+
+## Notebooks
+
+With the database running and loaded:
+
+```bash
+jupyter lab
+```
+
+Open the notebooks in `notebooks/` and run all cells from the top. They save charts to `reports/figures/` and confidence intervals to `reports/stats/`.
 
 ## Running tests
 

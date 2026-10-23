@@ -219,3 +219,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 .DS_Store
+
+# Generated data (rebuild with the generator instead of committing it)
+data/raw/
+data/processed/

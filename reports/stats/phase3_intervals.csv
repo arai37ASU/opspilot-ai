@@ -1,0 +1,13 @@
+comparison,rate_a_pct,n_a,rate_b_pct,n_b,difference_pts,low_pts,high_pts,excludes_zero
+P2: weekday after hours vs weekday staffed,71.04,1319,28.53,6040,42.51,39.81,45.21,True
+Misrouted vs routed correctly,23.46,2459,15.29,46783,8.17,6.46,9.88,True
+Classroom Technology: semester start vs regular,27.48,564,14.54,1850,12.94,8.92,16.96,True
+Security Operations: semester start vs regular,12.3,252,15.21,1755,-2.91,-7.3,1.48,False
+device_failure vs other Desktop Support incidents,44.59,1628,18.57,4034,26.03,23.33,28.72,True
+"Desktop Support, 2025Q2 vs 2024Q2",24.83,1039,15.03,1078,9.8,6.42,13.19,True
+"Security Operations, 2025Q1 vs 2024Q1",18.98,411,12.21,344,6.77,1.64,11.9,True
+"Security Operations, 2025Q1 vs 2024Q1 (excluding phishing days)",12.84,335,12.21,344,0.63,-4.35,5.61,False
+"Security Operations, 2025Q2 vs 2024Q2",15.77,279,11.78,314,3.99,-1.58,9.56,False
+"Security Operations, 2025Q3 vs 2024Q3",15.67,268,10.49,305,5.18,-0.37,10.73,False
+"Network Operations, 2025Q1 vs 2024Q1",24.16,948,30.19,977,-6.04,-10.0,-2.07,True
+"Enterprise Applications, 2025Q3 vs 2024Q3",20.58,1006,25.45,1053,-4.87,-8.5,-1.25,True

@@ -220,14 +220,15 @@ Quarters are compared with the same quarter a year earlier, so the academic cale
 | Security Operations | Q1 2025 | 19.0% | +6.8 | +1.6 to +11.9 |
 | Network Operations | Q1 2025 | 24.2% | -6.0 | -10.0 to -2.1 |
 | Security Operations | Q3 2025 | 15.7% | +5.2 | -0.4 to +10.7 |
-| Enterprise Applications | Q3 2025 | 20.6% | -4.9 | not computed |
+| Enterprise Applications | Q3 2025 | 20.6% | -4.9 | -8.5 to -1.2 |
 
 - **Desktop Support, Q2 2025** is the staffing reduction. The effect is large and clearly outside sampling noise, and the rate returns to its usual level in Q3.
 - **Security Operations, Q1 2025** is the March phishing campaign. Excluding 18-20 March, the quarter's breach rate is 12.8%, the same as Q1 2024 (12.2%).
 - **Network Operations, Q1 2025** looks like an improvement but is the February 2024 Wi-Fi outage making the earlier quarter worse (30.2%).
 - **Security Operations' Q2 and Q3 2025 increases** (+4.0 and +5.2) have intervals that include zero. With about 270-310 resolved tickets a quarter, changes of this size cannot be distinguished from noise.
+- **Enterprise Applications, Q3 2025** has an interval that excludes zero, but no known cause: the earlier quarter was simply high (25.5%). With 28 year-over-year team-quarter comparisons, about 1.4 are expected to exclude zero by chance at 95% confidence, so this is most likely one of them.
 
-Without the intervals, the largest-changes list would suggest four separate team problems. Only one of them is a lasting operational change.
+Without the intervals, the largest-changes list would suggest five separate team changes. Only one of them is a lasting operational change.
 
 ## What the data suggests
 
@@ -244,7 +245,7 @@ These follow from the findings above. With real data, each would need confirming
 
 - **Synthetic data.** The relationships were designed, so the analysis demonstrates method, not real-world causes.
 - **Associations, not causes.** Comparisons hold at most one factor fixed (priority in section 2). The SLA model and later analysis can account for several factors together.
-- **Confidence intervals** were computed separately with a normal approximation for the difference of two proportions, for the comparisons quoted in the text. They are not yet part of the saved query outputs.
-- **Department** was not analyzed here. In the generator it affects outcomes only through the mix of issues it submits, which is a confounding question for the exploratory analysis phase.
+- **Confidence intervals** use a normal approximation for the difference of two proportions. They are computed in [notebooks/01_eda.ipynb](../notebooks/01_eda.ipynb) (section 8) with a tested helper and saved to [reports/stats/phase3_intervals.csv](../reports/stats/phase3_intervals.csv).
+- **Department** was not analyzed here. The exploratory analysis (notebook 01, section 5) shows its apparent differences are mostly explained by the mix of issues each department submits.
 - **Cancelled tickets** are excluded from backlog because their cancellation time is not recorded.
 - **Snapshot effects** are small: only 45 tickets were unresolved at the snapshot.

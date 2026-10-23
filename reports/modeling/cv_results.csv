@@ -1,0 +1,13 @@
+model,fold,n_train,n,base_rate,average_precision,roc_auc,brier,precision_at_capacity,recall_at_capacity
+baseline_prior,1,15804,6306,0.1545,0.1545,0.5,0.1306,0.1696,0.1099
+baseline_prior,2,22110,7059,0.1648,0.1648,0.5,0.1377,0.1459,0.0886
+baseline_prior,3,29169,5257,0.1573,0.1573,0.5,0.1326,0.1635,0.104
+baseline_subcategory_history,1,15804,6306,0.1545,0.3037,0.7442,0.1179,0.3597,0.2331
+baseline_subcategory_history,2,22110,7059,0.1648,0.3145,0.7349,0.1241,0.3867,0.2347
+baseline_subcategory_history,3,29169,5257,0.1573,0.3108,0.7362,0.1191,0.3916,0.2491
+logistic_regression,1,15804,6306,0.1545,0.638,0.8822,0.0861,0.664,0.4302
+logistic_regression,2,22110,7059,0.1648,0.6306,0.8751,0.092,0.7054,0.4282
+logistic_regression,3,29169,5257,0.1573,0.6512,0.8861,0.0869,0.6901,0.4389
+logistic_regression_interactions,1,15804,6306,0.1545,0.6521,0.8853,0.0845,0.6878,0.4456
+logistic_regression_interactions,2,22110,7059,0.1648,0.6442,0.8774,0.0907,0.7082,0.4299
+logistic_regression_interactions,3,29169,5257,0.1573,0.6609,0.888,0.0856,0.7015,0.4462

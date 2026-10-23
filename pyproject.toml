@@ -19,6 +19,12 @@ dependencies = [
 dev = [
     "pytest>=8.0",
 ]
+# Notebooks and exploratory analysis; not needed to generate or load data.
+analysis = [
+    "jupyterlab>=4.2",
+    "matplotlib>=3.9",
+    "scipy>=1.13",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

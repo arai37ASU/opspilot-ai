@@ -74,5 +74,15 @@ REVIEW_CAPACITY = 0.10
 # within this distance of the best model's.
 SELECTION_TOLERANCE = 0.01
 
+# What "simpler" means for the rule above, simplest first. Fixed before any
+# tree model was scored, so the order cannot be chosen to suit the results.
+# Baselines are reference points and are not eligible for selection.
+SIMPLICITY_ORDER = [
+    "logistic_regression",
+    "logistic_regression_interactions",
+    "random_forest",
+    "xgboost",
+]
+
 RANDOM_SEED = 42
 BOOTSTRAP_SAMPLES = 1000

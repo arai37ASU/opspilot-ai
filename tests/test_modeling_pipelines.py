@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.metrics import roc_auc_score
 
 from opspilot.modeling import config
 from opspilot.modeling.pipelines import (
@@ -9,6 +10,10 @@ from opspilot.modeling.pipelines import (
     coefficient_table,
     logistic_regression,
     logistic_regression_grid,
+    random_forest,
+    random_forest_grid,
+    xgboost,
+    xgboost_grid,
 )
 
 
@@ -86,8 +91,29 @@ def test_grid_covers_regularization_and_weighting():
     assert {model.named_steps["model"].class_weight for model in grid.values()} == {None, "balanced"}
 
 
-def test_fitting_is_deterministic(sample):
+@pytest.mark.parametrize("make_model", [logistic_regression, lambda: random_forest(n_estimators=30),
+                                        lambda: xgboost(n_estimators=30)],
+                         ids=["logistic_regression", "random_forest", "xgboost"])
+def test_fitting_is_deterministic(sample, make_model):
     X, y = sample
-    first = logistic_regression().fit(X, y).predict_proba(X)
-    second = logistic_regression().fit(X, y).predict_proba(X)
+    first = make_model().fit(X, y).predict_proba(X)
+    second = make_model().fit(X, y).predict_proba(X)
     assert np.array_equal(first, second)
+
+
+@pytest.mark.parametrize("make_model", [lambda: random_forest(n_estimators=30), lambda: xgboost(n_estimators=30)],
+                         ids=["random_forest", "xgboost"])
+def test_tree_models_learn_and_handle_unseen_values(sample, make_model):
+    X, y = sample
+    model = make_model().fit(X.iloc[:400], y.iloc[:400])
+    held_out = model.predict_proba(X.iloc[400:])[:, 1]
+    assert roc_auc_score(y.iloc[400:], held_out) > 0.7
+    new = X.head(2).copy()
+    new.loc[new.index[0], "subcategory"] = "never_seen"
+    new.loc[new.index[1], "team_breach_rate_prev_30d"] = np.nan
+    assert np.isfinite(model.predict_proba(new)).all()
+
+
+def test_tree_grids_have_the_planned_sizes():
+    assert len(random_forest_grid()) == 6
+    assert len(xgboost_grid()) == 8

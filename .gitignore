@@ -223,3 +223,6 @@ __marimo__/
 # Generated data (rebuild with the generator instead of committing it)
 data/raw/
 data/processed/
+
+# Fitted models (rebuild with python -m opspilot.modeling.train)
+models/

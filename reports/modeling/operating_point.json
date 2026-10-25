@@ -1,0 +1,29 @@
+{
+  "model": "xgboost",
+  "review_capacity": 0.1,
+  "threshold": 0.4565680921077728,
+  "threshold_by_fold": {
+    "1": 0.43145424127578735,
+    "2": 0.49391135573387146,
+    "3": 0.41631510853767395
+  },
+  "share_flagged_by_fold": {
+    "1": 0.09292737075800825,
+    "2": 0.1170137413231336,
+    "3": 0.08560015217804831
+  },
+  "best_f1": {
+    "threshold": 0.2874860465526581,
+    "precision": 0.5520504731861199,
+    "recall": 0.6494601889338731,
+    "f1": 0.5968066966361806,
+    "share_flagged": 0.18725163784770701
+  },
+  "calibration": {
+    "expected_calibration_error": 0.003743335821471823,
+    "mean_predicted": 0.15712255239486694,
+    "observed_rate": 0.15916657716679197,
+    "decision": "no calibration step: the model's probabilities already match observed rates"
+  },
+  "validation_tickets": 18622
+}

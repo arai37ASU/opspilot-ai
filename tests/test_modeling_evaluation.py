@@ -9,11 +9,18 @@ from opspilot.modeling.baselines import FeatureScore
 from opspilot.modeling.compare import compare, summarize
 from opspilot.modeling.dataset import load_modeling_frame, split_train_test
 from opspilot.modeling.evaluation import (
+    best_f1_threshold,
     bootstrap_interval,
+    calibration_table,
+    capacity_curve,
     cross_validate,
     evaluate,
+    expected_calibration_error,
     flag_top_share,
+    out_of_fold_predictions,
     precision_recall_at_share,
+    select_model,
+    threshold_for_share,
     time_folds,
 )
 
@@ -94,6 +101,110 @@ def test_bootstrap_interval_narrows_with_more_data():
         return high - low
 
     assert width(10_000) < width(500)
+
+
+# --- Calibration and thresholds ---------------------------------------------------
+
+
+def test_calibration_of_perfectly_calibrated_scores_is_near_zero():
+    rng = np.random.default_rng(0)
+    scores = rng.uniform(0, 1, 50_000)
+    y = rng.random(50_000) < scores  # outcomes drawn at exactly the predicted rate
+    assert expected_calibration_error(y, scores) < 0.01
+
+
+def test_calibration_detects_overconfident_scores():
+    rng = np.random.default_rng(0)
+    true_rate = rng.uniform(0, 1, 50_000)
+    y = rng.random(50_000) < true_rate
+    inflated = np.clip(true_rate * 1.5, 0, 1)
+    assert expected_calibration_error(y, inflated) > 0.1
+    table = calibration_table(y, inflated)
+    assert (table["mean_predicted"] >= table["observed_rate"]).all()
+
+
+def test_threshold_for_share_flags_that_share():
+    scores = np.linspace(0, 1, 1000)
+    threshold = threshold_for_share(scores, 0.10)
+    assert (scores >= threshold).mean() == pytest.approx(0.10)
+
+
+def test_capacity_curve_trades_precision_for_recall():
+    rng = np.random.default_rng(0)
+    y = rng.random(5000) < 0.15
+    scores = np.clip(0.15 + 0.4 * y + rng.normal(0, 0.2, 5000), 0, 1)
+    curve = capacity_curve(y, scores, [0.05, 0.10, 0.20, 0.30])
+    assert curve["recall"].is_monotonic_increasing
+    assert curve["threshold"].is_monotonic_decreasing
+
+
+def test_best_f1_threshold_by_hand():
+    y = np.array([1, 1, 0, 1, 0, 0])
+    scores = np.array([0.9, 0.8, 0.7, 0.6, 0.2, 0.1])
+    best = best_f1_threshold(y, scores)
+    # Flagging the top four (threshold 0.6) catches all three positives with precision 3/4: F1 = 6/7.
+    assert best["threshold"] == pytest.approx(0.6)
+    assert best["f1"] == pytest.approx(6 / 7)
+    assert best["share_flagged"] == pytest.approx(4 / 6)
+
+
+def test_operating_point_summary():
+    from opspilot.modeling.operating_point import operating_point
+
+    rng = np.random.default_rng(0)
+    y = rng.random(3000) < 0.15
+    predictions = pd.DataFrame({"fold": np.repeat([1, 2, 3], 1000), "y": y.astype(int),
+                                "score": np.clip(0.15 + 0.4 * y + rng.normal(0, 0.2, 3000), 0, 1)})
+    result = operating_point("xgboost", predictions)
+    assert (predictions["score"] >= result["threshold"]).mean() == pytest.approx(config.REVIEW_CAPACITY)
+    assert sum(result["share_flagged_by_fold"].values()) / 3 == pytest.approx(config.REVIEW_CAPACITY)
+    assert set(result["threshold_by_fold"]) == {1, 2, 3}
+
+
+def test_out_of_fold_predictions_cover_each_validation_row_once(created_at):
+    X = pd.DataFrame({"x": np.arange(len(created_at), dtype=float)})
+    y = pd.Series((np.arange(len(created_at)) % 5 == 0).astype(int))
+    folds = time_folds(created_at)
+    predictions = out_of_fold_predictions(DummyClassifier(strategy="prior"), X, y, folds)
+    expected = np.concatenate([validation for _, validation in folds])
+    assert predictions["position"].tolist() == expected.tolist()
+    assert predictions["y"].tolist() == y.iloc[expected].tolist()
+
+
+# --- Selection rule ---------------------------------------------------------------
+
+
+def summary_with(**scores):
+    return pd.DataFrame({"average_precision_mean": scores})
+
+
+def test_selection_picks_the_best_when_nothing_simpler_is_close():
+    summary = summary_with(logistic_regression=0.60, random_forest=0.65, xgboost=0.70)
+    assert select_model(summary) == "xgboost"
+
+
+def test_selection_prefers_a_simpler_model_within_tolerance():
+    summary = summary_with(logistic_regression=0.640, logistic_regression_interactions=0.652, xgboost=0.658)
+    assert select_model(summary) == "logistic_regression_interactions"
+
+
+def test_selection_tolerance_boundary_is_inclusive():
+    summary = summary_with(logistic_regression=0.65, xgboost=0.66)
+    assert select_model(summary, tolerance=0.01) == "logistic_regression"
+    assert select_model(summary, tolerance=0.009) == "xgboost"
+
+
+def test_every_model_in_the_simplicity_order_is_a_candidate():
+    from opspilot.modeling.compare import candidate_models
+
+    names = set(candidate_models())
+    assert set(config.SIMPLICITY_ORDER) <= names
+    assert {name for name in names if not name.startswith("baseline_")} == set(config.SIMPLICITY_ORDER)
+
+
+def test_selection_ignores_baselines():
+    summary = summary_with(baseline_prior=0.99, logistic_regression=0.5)
+    assert select_model(summary) == "logistic_regression"
 
 
 # --- Baselines and cross-validation ------------------------------------------------

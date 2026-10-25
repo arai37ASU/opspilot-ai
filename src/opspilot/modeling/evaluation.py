@@ -9,7 +9,7 @@ from collections.abc import Callable
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
-from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
+from sklearn.metrics import average_precision_score, brier_score_loss, precision_recall_curve, roc_auc_score
 
 from opspilot.modeling import config
 
@@ -81,13 +81,116 @@ def cross_validate(model, X: pd.DataFrame, y: pd.Series, folds: list[tuple[np.nd
     gives each fold an unfitted copy, so nothing learned in one fold carries
     into the next.
     """
+    predictions = out_of_fold_predictions(model, X, y, folds)
     rows = []
+    for number, (train_index, _) in enumerate(folds, start=1):
+        fold = predictions[predictions["fold"] == number]
+        rows.append({"fold": number, "n_train": len(train_index), **evaluate(fold["y"], fold["score"])})
+    return pd.DataFrame(rows)
+
+
+def out_of_fold_predictions(model, X: pd.DataFrame, y: pd.Series,
+                            folds: list[tuple[np.ndarray, np.ndarray]]) -> pd.DataFrame:
+    """Validation-set predictions from every fold, each made by a model that
+    never saw those tickets. Columns: position (row in X), fold, y, score."""
+    parts = []
     for number, (train_index, validation_index) in enumerate(folds, start=1):
         fitted = clone(model).fit(X.iloc[train_index], y.iloc[train_index])
-        scores = fitted.predict_proba(X.iloc[validation_index])[:, 1]
-        rows.append({"fold": number, "n_train": len(train_index),
-                     **evaluate(y.iloc[validation_index], scores)})
+        parts.append(pd.DataFrame({
+            "position": validation_index,
+            "fold": number,
+            "y": y.iloc[validation_index].to_numpy(),
+            "score": fitted.predict_proba(X.iloc[validation_index])[:, 1],
+        }))
+    return pd.concat(parts, ignore_index=True)
+
+
+def calibration_table(y: np.ndarray, scores: np.ndarray, bins: int = 10) -> pd.DataFrame:
+    """Mean predicted probability against the observed rate in equal-sized risk bands."""
+    frame = pd.DataFrame({"y": np.asarray(y, dtype=float), "score": np.asarray(scores, dtype=float)})
+    frame["band"] = pd.qcut(frame["score"], bins, labels=False, duplicates="drop")
+    return frame.groupby("band").agg(n=("y", "size"), mean_predicted=("score", "mean"), observed_rate=("y", "mean"))
+
+
+def expected_calibration_error(y: np.ndarray, scores: np.ndarray, bins: int = 10) -> float:
+    """Average gap between predicted and observed rates across risk bands,
+    weighted by band size. 0 means predictions match outcomes on average."""
+    table = calibration_table(y, scores, bins)
+    weights = table["n"] / table["n"].sum()
+    return float((weights * (table["mean_predicted"] - table["observed_rate"]).abs()).sum())
+
+
+def threshold_for_share(scores: np.ndarray, share: float) -> float:
+    """The probability cut-off that flags `share` of these tickets.
+
+    It is the lowest score among the flagged tickets, so applying
+    `score >= threshold` to the same scores flags that share (more if
+    several tickets tie at the cut-off).
+    """
+    flagged = flag_top_share(scores, share)
+    return float(np.asarray(scores, dtype=float)[flagged].min())
+
+
+def threshold_metrics(y: np.ndarray, scores: np.ndarray, threshold: float) -> dict[str, float]:
+    """Outcomes of flagging every ticket with `score >= threshold`.
+
+    Unlike precision_recall_at_share, the share flagged is not fixed: it is
+    whatever the threshold produces on these tickets, which is how a deployed
+    threshold behaves.
+    """
+    y = np.asarray(y).astype(bool)
+    flagged = np.asarray(scores, dtype=float) >= threshold
+    true_positives = int((flagged & y).sum())
+    false_positives = int((flagged & ~y).sum())
+    false_negatives = int((~flagged & y).sum())
+    true_negatives = int((~flagged & ~y).sum())
+    return {
+        "share_flagged": float(flagged.mean()),
+        "precision": true_positives / flagged.sum() if flagged.any() else 0.0,
+        "recall": true_positives / y.sum() if y.any() else 0.0,
+        "true_positives": true_positives,
+        "false_positives": false_positives,
+        "false_negatives": false_negatives,
+        "true_negatives": true_negatives,
+    }
+
+
+def capacity_curve(y: np.ndarray, scores: np.ndarray, shares: list[float]) -> pd.DataFrame:
+    """Precision and recall if the desk could review different shares of tickets."""
+    rows = []
+    for share in shares:
+        precision, recall = precision_recall_at_share(y, scores, share)
+        rows.append({"review_share": share, "threshold": threshold_for_share(scores, share),
+                     "precision": precision, "recall": recall})
     return pd.DataFrame(rows)
+
+
+def best_f1_threshold(y: np.ndarray, scores: np.ndarray) -> dict[str, float]:
+    """The threshold with the highest F1, for comparison with the capacity-based one."""
+    precision, recall, thresholds = precision_recall_curve(y, scores)
+    f1 = 2 * precision * recall / np.where(precision + recall == 0, 1, precision + recall)
+    best = int(np.argmax(f1[:-1]))  # the last point has no threshold
+    threshold = float(thresholds[best])
+    return {"threshold": threshold, "precision": float(precision[best]), "recall": float(recall[best]),
+            "f1": float(f1[best]), "share_flagged": float((np.asarray(scores) >= threshold).mean())}
+
+
+def select_model(
+    summary: pd.DataFrame,
+    simplicity_order: list[str] = config.SIMPLICITY_ORDER,
+    tolerance: float = config.SELECTION_TOLERANCE,
+) -> str:
+    """Apply the pre-registered selection rule.
+
+    Among eligible models, find the best mean validation average precision;
+    then choose the simplest model whose mean is within `tolerance` of it.
+    `summary` is indexed by model name with an `average_precision_mean` column.
+    """
+    eligible = summary.loc[[name for name in simplicity_order if name in summary.index], "average_precision_mean"]
+    if eligible.empty:
+        raise ValueError("no eligible models in the summary")
+    close_enough = eligible[eligible >= eligible.max() - tolerance]
+    return next(name for name in simplicity_order if name in close_enough.index)
 
 
 def bootstrap_interval(

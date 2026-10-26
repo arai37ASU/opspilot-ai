@@ -1,0 +1,87 @@
+{
+  "base_log_odds": -1.706,
+  "threshold": 0.4565680921077728,
+  "examples": {
+    "caught_breach": {
+      "ticket_id": "TKT-041779",
+      "predicted_risk": 0.997,
+      "breached": true,
+      "reasons": [
+        {
+          "feature": "hours_until_staffed",
+          "value": 13.24,
+          "contribution": 2.321
+        },
+        {
+          "feature": "priority",
+          "value": "P2",
+          "contribution": 1.404
+        },
+        {
+          "feature": "sla_hours",
+          "value": 8.0,
+          "contribution": 1.176
+        },
+        {
+          "feature": "subcategory_breach_rate_prev_90d",
+          "value": 0.4167,
+          "contribution": 0.984
+        }
+      ]
+    },
+    "false_alarm": {
+      "ticket_id": "TKT-040733",
+      "predicted_risk": 0.948,
+      "breached": false,
+      "reasons": [
+        {
+          "feature": "hours_until_staffed",
+          "value": 13.74,
+          "contribution": 2.056
+        },
+        {
+          "feature": "team_open_per_agent",
+          "value": 6.17,
+          "contribution": 0.848
+        },
+        {
+          "feature": "sla_hours",
+          "value": 24.0,
+          "contribution": 0.651
+        },
+        {
+          "feature": "subcategory_breach_rate_prev_90d",
+          "value": 0.314,
+          "contribution": 0.483
+        }
+      ]
+    },
+    "missed_breach": {
+      "ticket_id": "TKT-045425",
+      "predicted_risk": 0.001,
+      "breached": true,
+      "reasons": [
+        {
+          "feature": "subcategory_breach_rate_prev_90d",
+          "value": 0.0058,
+          "contribution": -3.047
+        },
+        {
+          "feature": "sla_hours",
+          "value": 72.0,
+          "contribution": -1.096
+        },
+        {
+          "feature": "subcategory_resolved_prev_90d",
+          "value": 686.0,
+          "contribution": -0.806
+        },
+        {
+          "feature": "subcategory",
+          "value": "password_reset",
+          "contribution": -0.221
+        }
+      ]
+    }
+  }
+}

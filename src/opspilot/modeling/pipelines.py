@@ -94,11 +94,20 @@ def logistic_regression_grid() -> dict[str, Pipeline]:
 
 
 def tree_preprocessor() -> ColumnTransformer:
-    """One-hot categories and impute numbers; no scaling, which trees do not need."""
+    """One-hot categories and impute numbers; no scaling, which trees do not need.
+
+    The output is always a sparse matrix. ColumnTransformer otherwise picks
+    sparse or dense per batch depending on how many zeros it contains, and
+    XGBoost reads zeros that are not stored in a sparse matrix as missing, so
+    the same ticket could be scored differently depending on what it was
+    batched with. Always sparse keeps training and scoring identical. It also
+    means XGBoost treats every zero value as missing and learns a default
+    branch for it; that behaviour is what was validated and tested.
+    """
     return ColumnTransformer([
         ("categorical", OneHotEncoder(handle_unknown="ignore"), config.CATEGORICAL_FEATURES),
         ("numeric", SimpleImputer(strategy="median", add_indicator=True), config.NUMERIC_FEATURES),
-    ], verbose_feature_names_out=True)
+    ], sparse_threshold=1.0, verbose_feature_names_out=True)
 
 
 def random_forest(min_samples_leaf: int = 1, max_features: str | float = "sqrt", n_estimators: int = 300) -> Pipeline:

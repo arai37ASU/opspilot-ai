@@ -1,0 +1,90 @@
+{
+  "model": "xgboost",
+  "threshold": 0.4565680921077728,
+  "train_period": [
+    "2024-02-01 01:57:41",
+    "2025-06-30 22:16:54"
+  ],
+  "test_period": [
+    "2025-07-01 00:02:51",
+    "2025-12-17 22:55:21"
+  ],
+  "train_tickets": 34426,
+  "test_tickets": 11747,
+  "selected": {
+    "n": 11747,
+    "base_rate": 0.15689112113731166,
+    "average_precision": 0.6802719751566848,
+    "roc_auc": 0.8967233022474245,
+    "brier": 0.08193424649354236,
+    "at_threshold": {
+      "share_flagged": 0.1012173320847876,
+      "precision": 0.7132043734230445,
+      "recall": 0.46011937059142705,
+      "true_positives": 848,
+      "false_positives": 341,
+      "false_negatives": 995,
+      "true_negatives": 9563
+    },
+    "expected_calibration_error": 0.005129451547148428,
+    "intervals_95": {
+      "average_precision": [
+        0.6609881442656766,
+        0.6991083160691108
+      ],
+      "roc_auc": [
+        0.8898057816782596,
+        0.9035555839019902
+      ],
+      "brier": [
+        0.07848268886146631,
+        0.08527866596078763
+      ],
+      "precision_at_threshold": [
+        0.6873825056583677,
+        0.7376195688639238
+      ],
+      "recall_at_threshold": [
+        0.4364905453798502,
+        0.48219181960163304
+      ]
+    }
+  },
+  "references": {
+    "baseline_prior": {
+      "base_rate": 0.15689112113731166,
+      "average_precision": 0.15689112113731166,
+      "roc_auc": 0.5,
+      "brier": 0.13227660615165632,
+      "precision_at_capacity": 0.10297872340425532,
+      "recall_at_capacity": 0.06565382528486163
+    },
+    "baseline_subcategory_history": {
+      "base_rate": 0.15689112113731166,
+      "average_precision": 0.31277729387090664,
+      "roc_auc": 0.7452163942595526,
+      "brier": 0.1188095011398655,
+      "precision_at_capacity": 0.37446808510638296,
+      "recall_at_capacity": 0.23874118285404233
+    },
+    "logistic_regression_interactions": {
+      "base_rate": 0.15689112113731166,
+      "average_precision": 0.6661390698366036,
+      "roc_auc": 0.8922226351816285,
+      "brier": 0.08370590135669112,
+      "precision_at_capacity": 0.7157446808510638,
+      "recall_at_capacity": 0.45632121540965814
+    }
+  },
+  "evaluated_at": "2026-10-25T03:08:02+00:00",
+  "git": {
+    "commit": "e6d8fe52dd4e8fde36a501c2f288f584140be5b7",
+    "uncommitted_changes": false
+  },
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "pandas": "3.0.6",
+    "numpy": "2.5.4"
+  }
+}

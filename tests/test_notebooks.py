@@ -2,7 +2,8 @@
 
 Each notebook is copied into a temporary folder and executed there against the
 test database, so the run cannot change the committed notebook, the saved
-figures, or the analysis database.
+figures, or the analysis database. The committed modeling results are copied
+alongside, because notebook 03 reads them instead of retraining.
 """
 
 import shutil
@@ -13,7 +14,8 @@ import pytest
 nbformat = pytest.importorskip("nbformat")
 nbclient = pytest.importorskip("nbclient")
 
-NOTEBOOKS = sorted((Path(__file__).resolve().parents[1] / "notebooks").glob("*.ipynb"))
+REPOSITORY = Path(__file__).resolve().parents[1]
+NOTEBOOKS = sorted((REPOSITORY / "notebooks").glob("*.ipynb"))
 
 pytestmark = pytest.mark.db
 
@@ -26,6 +28,7 @@ def test_notebook_runs(path, db_conn, test_database_url, tmp_path, monkeypatch):
     workdir = tmp_path / "notebooks"
     workdir.mkdir()
     shutil.copy(path, workdir)
+    shutil.copytree(REPOSITORY / "reports" / "modeling", tmp_path / "reports" / "modeling")
 
     notebook = nbformat.read(workdir / path.name, as_version=4)
     client = nbclient.NotebookClient(notebook, timeout=300, kernel_name="python3",

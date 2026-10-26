@@ -13,8 +13,9 @@ Built so far:
 - Business analysis queries with saved results (`sql/analysis/`, `reports/sql/`), written up in [docs/sql_analysis.md](docs/sql_analysis.md)
 - A leakage-safe feature view for SLA breach prediction (`sql/features/`), built by the loader
 - Exploratory analysis notebooks (`notebooks/`), written up in [docs/eda_findings.md](docs/eda_findings.md), ending in a recorded plan for the SLA breach model
+- An SLA breach risk model (`src/opspilot/modeling/`): baselines, logistic regression, random forest and XGBoost compared on time-based validation folds, a threshold chosen on validation, a single test evaluation, and explanations. See [docs/modeling.md](docs/modeling.md) and the [model card](docs/model_card.md).
 
-Not built yet: ML models, API, dashboard, AI insight layer, deployment.
+Not built yet: API, dashboard, AI insight layer, deployment.
 
 ## Setup
 
@@ -66,6 +67,34 @@ Run the business analysis queries in [sql/analysis/](sql/analysis/) and save eac
 python -m opspilot.db.analysis --output-dir reports/sql
 ```
 
+## SLA breach model
+
+With the database loaded, in order:
+
+```bash
+python -m opspilot.modeling.compare
+```
+
+Cross-validates the baselines and models on three time-ordered folds inside the training period, writes `reports/modeling/cv_results.csv`, and prints the model chosen by the pre-registered selection rule.
+
+```bash
+python -m opspilot.modeling.operating_point
+```
+
+Chooses the probability threshold for the assumed review capacity and checks calibration, on validation predictions only.
+
+```bash
+python -m opspilot.modeling.train
+```
+
+Fits the selected model on all training data and evaluates it once on the test period. It refuses to run on uncommitted code or to overwrite an existing result. The fitted model goes to `models/` (not committed); results go to `reports/modeling/test_*`.
+
+```bash
+python -m opspilot.modeling.explain
+```
+
+Writes feature importance (permutation and SHAP) and example per-ticket explanations.
+
 ## Notebooks
 
 With the database running and loaded:
@@ -74,7 +103,7 @@ With the database running and loaded:
 jupyter lab
 ```
 
-Open the notebooks in `notebooks/` and run all cells from the top. They save charts to `reports/figures/` and confidence intervals to `reports/stats/`.
+Open the notebooks in `notebooks/` and run all cells from the top. They save charts to `reports/figures/` and confidence intervals to `reports/stats/`. Notebook 03 only reads the saved results in `reports/modeling/` and does not retrain.
 
 ## Running tests
 

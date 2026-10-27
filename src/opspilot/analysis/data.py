@@ -17,7 +17,7 @@ INTEGERS = {20, 21, 23}  # bigint, smallint, integer
 BOOLEAN = 16
 
 
-def read_sql(conn: psycopg.Connection, query: str, params: list | None = None) -> pd.DataFrame:
+def read_sql(conn: psycopg.Connection, query: str, params: list | dict | None = None) -> pd.DataFrame:
     cursor = conn.execute(query, params)
     columns = [column.name for column in cursor.description]
     frame = pd.DataFrame(cursor.fetchall(), columns=columns)

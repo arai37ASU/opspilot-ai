@@ -1,1 +1,1 @@
--e .[dev,analysis,modeling]
+-e .[dev,analysis,modeling,api]

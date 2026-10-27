@@ -1,5 +1,8 @@
+import json
 import os
+from pathlib import Path
 
+import joblib
 import psycopg
 import pytest
 
@@ -44,3 +47,34 @@ def db_conn(test_database_url, data_dir):
     with psycopg.connect(test_database_url, autocommit=True) as conn:
         load_dataset(conn, data_dir)
         yield conn
+
+
+@pytest.fixture(scope="session")
+def api_model_dir(tmp_path_factory, db_conn):
+    """A small XGBoost model and its metadata, so API tests do not depend on models/."""
+    from opspilot.modeling.dataset import load_modeling_frame, split_train_test, to_model_inputs
+    from opspilot.modeling.pipelines import xgboost
+
+    directory = tmp_path_factory.mktemp("models")
+    train, _ = split_train_test(load_modeling_frame(db_conn))
+    X, y = to_model_inputs(train.head(5000))
+    joblib.dump(xgboost(n_estimators=20).fit(X, y), directory / "sla_breach_model.joblib")
+    (directory / "sla_breach_model.json").write_text(json.dumps({
+        "model": "xgboost", "threshold": 0.457, "features": list(X.columns),
+        "train_period": ["2024-02-01", "2025-06-30"], "git": {"commit": "a" * 40},
+    }))
+    return directory
+
+
+@pytest.fixture(scope="session")
+def client(api_model_dir, test_database_url):
+    """An API client against the test database. The with block runs startup and shutdown."""
+    from fastapi.testclient import TestClient
+
+    from opspilot.api.main import create_app
+    from opspilot.api.settings import Settings
+
+    settings = Settings(database_url=test_database_url, model_dir=api_model_dir,
+                        reports_dir=Path("reports/modeling"))
+    with TestClient(create_app(settings)) as client:
+        yield client

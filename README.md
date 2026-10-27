@@ -15,7 +15,9 @@ Built so far:
 - Exploratory analysis notebooks (`notebooks/`), written up in [docs/eda_findings.md](docs/eda_findings.md), ending in a recorded plan for the SLA breach model
 - An SLA breach risk model (`src/opspilot/modeling/`): baselines, logistic regression, random forest and XGBoost compared on time-based validation folds, a threshold chosen on validation, a single test evaluation, and explanations. See [docs/modeling.md](docs/modeling.md) and the [model card](docs/model_card.md).
 
-Not built yet: API, dashboard, AI insight layer, deployment.
+- A FastAPI service (`src/opspilot/api/`) that scores tickets with reasons and serves verified metrics, with a Docker image. See [docs/api.md](docs/api.md).
+
+Not built yet: dashboard, AI insight layer, CI/CD, cloud deployment.
 
 ## Setup
 
@@ -94,6 +96,22 @@ python -m opspilot.modeling.explain
 ```
 
 Writes feature importance (permutation and SHAP) and example per-ticket explanations.
+
+## API
+
+After the model is built, start the database and the API together:
+
+```bash
+docker compose --profile api up -d --build
+```
+
+Or run it locally against the database container:
+
+```bash
+uvicorn opspilot.api.main:app --port 8000
+```
+
+Interactive documentation is at http://localhost:8000/docs. Endpoints, examples and limitations are in [docs/api.md](docs/api.md).
 
 ## Notebooks
 

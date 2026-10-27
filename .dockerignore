@@ -1,0 +1,17 @@
+# Keep secrets, local environments, generated data and large files out of the image.
+.env
+.venv/
+.git/
+data/
+models/
+notebooks/
+reports/figures/
+reports/sql/
+reports/stats/
+docs/
+tests/
+.claude/
+**/__pycache__/
+**/*.egg-info/
+.pytest_cache/
+.DS_Store

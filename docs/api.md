@@ -40,6 +40,7 @@ Configuration comes from environment variables: `DATABASE_URL` (required), `OPSP
 | `GET /metrics/teams` | Per-team KPIs for a date range |
 | `GET /metrics/daily` | Volume and breach rate for every day in a date range, with weekend, holiday and academic-period flags |
 | `GET /metrics/trend` | Monthly volume and breach rate for a date range |
+| `GET /metrics/spikes` | Unusual bursts of one issue, by day and grouped into episodes. Issues with one episode are suspected incidents, inferred from ticket data alone |
 | `GET /metrics/analysis` | The catalog of saved analysis queries |
 | `GET /metrics/analysis/{file}/{query}` | The rows of one analysis query |
 

@@ -9,7 +9,7 @@ Two kinds of endpoint:
   of producing their own.
 """
 
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -17,13 +17,16 @@ import psycopg
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from opspilot.analysis.data import read_sql
-from opspilot.api.schemas import AnalysisQuery, AnalysisResult, DayPoint, MonthPoint, Overview, Teams
+from opspilot.api.schemas import AnalysisQuery, AnalysisResult, DayPoint, MonthPoint, Overview, Spikes, Teams
 from opspilot.db.analysis import analysis_queries
 from opspilot.db.sql_files import parse_named_queries
 
 SQL_DIR = Path(__file__).resolve().parents[3] / "sql"
 METRICS_SQL = {query.name: query.sql for query in parse_named_queries((SQL_DIR / "api" / "metrics.sql").read_text())}
 ANALYSIS = {stem: {query.name: query for query in queries} for stem, queries in analysis_queries().items()}
+
+# Spike days of one issue less than this far apart belong to the same episode.
+EPISODE_GAP = timedelta(days=7)
 
 
 def file_question(stem: str) -> str:
@@ -88,6 +91,48 @@ def trend(request: Request, start: date | None = Query(None), end: date | None =
     with request.app.state.pool.connection() as conn:
         start, end = date_range(conn, start, end)
         return records(read_sql(conn, METRICS_SQL["monthly_trend"], {"start": start, "end": end}))
+
+
+def group_spikes(rows: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Label each spike day and group the days into episodes.
+
+    Days of one issue up to EPISODE_GAP apart form an episode. An issue with
+    a single episode is "one_off", a suspected incident; an issue that comes
+    back is "recurring", such as password resets every semester. This uses
+    ticket data only, so it has blind spots: two outages of the same kind
+    would count as recurring, and a seasonal surge looks one-off the first
+    time it happens.
+    """
+    episodes = []
+    for row in sorted(rows, key=lambda r: (r["subcategory"], r["day"])):
+        latest = episodes[-1] if episodes else None
+        if latest and latest["subcategory"] == row["subcategory"] and row["day"] - latest["end"] <= EPISODE_GAP:
+            latest["end"] = row["day"]
+            latest["tickets"] += row["tickets"]
+            latest["peak_two_hours"] = max(latest["peak_two_hours"], row["peak_two_hours"])
+        else:
+            episodes.append({"subcategory": row["subcategory"], "start": row["day"], "end": row["day"],
+                             "tickets": row["tickets"], "typical_daily": row["typical_daily"],
+                             "peak_two_hours": row["peak_two_hours"]})
+
+    counts = pd.Series([episode["subcategory"] for episode in episodes]).value_counts()
+    kind = lambda subcategory: "one_off" if counts[subcategory] == 1 else "recurring"
+    labelled_days = [{**row, "kind": kind(row["subcategory"])} for row in rows]
+    labelled_episodes = [{**episode, "kind": kind(episode["subcategory"])}
+                         for episode in sorted(episodes, key=lambda e: e["start"])]
+    return labelled_days, labelled_episodes
+
+
+@router.get("/spikes", response_model=Spikes)
+def spikes(request: Request):
+    """Unusual bursts of one issue, by day and grouped into episodes.
+
+    One-off episodes are suspected incidents, inferred from ticket data alone.
+    """
+    query = ANALYSIS["08_recurring_issue_spikes"]["daily_spikes"]
+    with request.app.state.pool.connection() as conn:
+        days, episodes = group_spikes(records(read_sql(conn, query.sql)))
+    return {"days": days, "episodes": episodes}
 
 
 @router.get("/analysis", response_model=list[AnalysisQuery])

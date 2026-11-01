@@ -10,7 +10,7 @@ import { TIME_GRID, axisStyle, chartCard, drawChart, escapeHtml, fillTable, tool
 import { el, pageHeader, replaceChildren } from "../dom.js";
 import { dateRangeFilter } from "../filters.js";
 import {
-  daysBetween, formatCompact, formatDay, formatHours, formatInteger, formatMonth,
+  CENSORING_DAYS, daysBetween, formatCompact, formatDay, formatHours, formatInteger, formatMonth,
   formatPercent, formatScore, formatShortDay,
 } from "../format.js";
 
@@ -153,10 +153,7 @@ function drawBreach(charts, card, points, daily) {
     points.map((p) => [p.fullLabel, formatPercent(p.breach)]));
 }
 
-// Tickets created near the end of the data that were heading for a breach
-// were mostly still open at the snapshot, so they are missing from the rate.
 // The chart is accurate but would read as a sudden improvement without this.
-const CENSORING_DAYS = 14;
 
 function showCensoringNote(card, rangeEnd, dataEnd) {
   card.root.querySelector(".chart-note")?.remove();

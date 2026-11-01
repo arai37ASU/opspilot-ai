@@ -16,6 +16,10 @@ export const formatDay = (iso) => asLocalDate(iso).toLocaleDateString("en-US", {
 export const formatShortDay = (iso) => asLocalDate(iso).toLocaleDateString("en-US", { day: "numeric", month: "short" });
 export const formatMonth = (iso) => asLocalDate(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
+// Tickets created this close to the end of the data that were heading for a
+// breach were mostly still open at the snapshot, so recent rates read too low.
+export const CENSORING_DAYS = 14;
+
 export function daysBetween(startIso, endIso) {
   return Math.round((asLocalDate(endIso) - asLocalDate(startIso)) / 86_400_000) + 1;
 }

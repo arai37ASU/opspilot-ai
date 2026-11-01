@@ -31,9 +31,11 @@ function yesNo(value) {
   return value ? "Yes" : "No";
 }
 
-// "projector_display" -> "Projector display"
+const SPECIAL_WORDS = { mfa: "MFA", wifi: "Wi-Fi", vpn: "VPN", os: "OS" };
+
+// "projector_display" -> "Projector display", "mfa_issue" -> "MFA issue"
 export function humanize(value) {
-  const text = String(value).replaceAll("_", " ");
+  const text = String(value).split("_").map((word) => SPECIAL_WORDS[word] ?? word).join(" ");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 

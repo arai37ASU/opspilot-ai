@@ -169,6 +169,31 @@ class DayPoint(BaseModel):
     is_holiday: bool
 
 
+class SpikeDay(BaseModel):
+    day: date
+    academic_period: str
+    subcategory: str
+    tickets: int
+    typical_daily: float = Field(description="The issue's median tickets per day across the whole data")
+    peak_two_hours: int = Field(description="Most tickets of this issue in any two hours of the day")
+    kind: Literal["one_off", "recurring"]
+
+
+class SpikeEpisode(BaseModel):
+    subcategory: str
+    kind: Literal["one_off", "recurring"] = Field(description="one_off is a suspected incident: the issue spiked in this episode only")
+    start: date
+    end: date
+    tickets: int
+    typical_daily: float
+    peak_two_hours: int
+
+
+class Spikes(BaseModel):
+    days: list[SpikeDay]
+    episodes: list[SpikeEpisode]
+
+
 class TicketRisk(Prediction):
     ticket_id: str
     created_at: datetime

@@ -244,8 +244,6 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 .card h2 { font-size: var(--text-large); margin-bottom: var(--space-2); }
 .card p { margin: 0; color: var(--text-muted); }
 
-.coming-soon { border-style: dashed; box-shadow: none; }
-.coming-soon ul { margin: var(--space-3) 0 0; padding-left: var(--space-5); color: var(--text-muted); }
 .badge {
   display: inline-block;
   padding: 2px var(--space-2);
@@ -495,6 +493,44 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 .outcome-count { display: block; font-size: 1.5rem; font-weight: 650; font-variant-numeric: tabular-nums; }
 .outcome-label { font-size: var(--text-small); color: var(--text-muted); }
 
+/* ---- Incident radar --------------------------------------------------- */
+/* A two-year calendar needs its width; on a phone it scrolls inside its card. */
+.calendar-scroll { overflow-x: auto; }
+.chart.chart-calendar { min-width: 760px; height: 330px; }
+.mark-key { display: flex; flex-wrap: wrap; gap: var(--space-4); list-style: none; margin: var(--space-2) 0 0; padding: 0; font-size: var(--text-small); color: var(--text-muted); }
+.mark-key li { display: flex; align-items: center; gap: var(--space-2); }
+.mark { width: 10px; height: 10px; border-radius: 50%; }
+.mark-incident { background: var(--risk-high); }
+.mark-surge { border: 1.5px solid var(--text); }
+.radar-columns { display: grid; gap: var(--space-4); grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.day-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.day-heading h2 { margin: 0; }
+.day-panel { display: grid; gap: var(--space-3); }
+.card .day-date { color: var(--text); font-size: 1.5rem; font-weight: 650; letter-spacing: -0.01em; }
+.event-list, .spike-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.event {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--risk-high);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.event:hover { background: var(--surface-2); }
+.event[aria-pressed="true"] { background: var(--surface-2); border-color: var(--text-muted); border-left-color: var(--risk-high); }
+.event-title { font-weight: 600; margin-right: var(--space-2); }
+.event-date { font-size: var(--text-small); color: var(--text); }
+.event-numbers { font-size: var(--text-small); color: var(--text-muted); }
+.spike { padding: var(--space-2) var(--space-3); border-radius: var(--radius-small); background: var(--surface-2); border-left: 3px solid var(--text-muted); }
+.spike[data-kind="one_off"] { border-left-color: var(--risk-high); }
+.spike .field-note { margin-top: var(--space-1); }
+
 .footer {
   padding: var(--space-5);
   border-top: 1px solid var(--border);
@@ -529,6 +565,7 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
   .stat-hero { grid-template-columns: 1fr; }
   .sim-layout { grid-template-columns: minmax(0, 1fr); }
   .chart-grid { grid-template-columns: minmax(0, 1fr); }
+  .radar-columns { grid-template-columns: minmax(0, 1fr); }
   .outcome { min-width: 0; padding: var(--space-2) var(--space-3); }
   .outcome-count { font-size: 1.25rem; }
   .small-multiples { grid-template-columns: minmax(0, 1fr); }

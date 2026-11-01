@@ -1,7 +1,11 @@
 """Tests for the endpoints that support the dashboard: /reference,
-/predictions/batch, /metrics/daily and /model/evaluation."""
+/predictions/batch, /metrics/daily, /metrics/spikes and /model/evaluation."""
+
+from datetime import date
 
 import pytest
+
+from opspilot.api.metrics import group_spikes
 
 pytestmark = pytest.mark.db
 
@@ -145,3 +149,50 @@ def test_example_tickets_exist_and_fall_in_the_test_period(client, evaluation):
         ticket = client.get(f"/tickets/{example['ticket_id']}/risk").json()
         assert ticket["created_at"][:10] >= test_start
         assert ticket["sla_breached"] == example["breached"]
+
+
+# --- /metrics/spikes -----------------------------------------------------------
+
+
+def spike(day, subcategory, tickets=20, peak=5):
+    return {"day": date.fromisoformat(day), "academic_period": "regular", "subcategory": subcategory,
+            "tickets": tickets, "typical_daily": 1.0, "peak_two_hours": peak}
+
+
+def test_days_close_together_form_one_episode():
+    _, episodes = group_spikes([spike("2025-03-18", "phishing_report", 37, 9), spike("2025-03-19", "phishing_report", 30, 12)])
+    assert len(episodes) == 1
+    assert episodes[0]["kind"] == "one_off"
+    assert episodes[0]["tickets"] == 67
+    assert episodes[0]["peak_two_hours"] == 12
+    assert (episodes[0]["start"], episodes[0]["end"]) == (date(2025, 3, 18), date(2025, 3, 19))
+
+
+def test_an_issue_that_comes_back_is_recurring():
+    days, episodes = group_spikes([spike("2024-09-03", "password_reset"), spike("2025-01-14", "password_reset"),
+                                   spike("2025-03-18", "phishing_report")])
+    assert {d["subcategory"]: d["kind"] for d in days} == {"password_reset": "recurring", "phishing_report": "one_off"}
+    assert [e["subcategory"] for e in episodes] == ["password_reset", "password_reset", "phishing_report"]
+
+
+def test_days_more_than_a_week_apart_are_separate_episodes():
+    _, episodes = group_spikes([spike("2024-01-01", "wifi_connectivity"), spike("2024-01-09", "wifi_connectivity")])
+    assert len(episodes) == 2
+
+
+def test_no_spikes_gives_empty_lists():
+    assert group_spikes([]) == ([], [])
+
+
+def test_spikes_endpoint_finds_the_four_planted_incidents(client):
+    body = client.get("/metrics/spikes").json()
+    assert len(body["days"]) == 24
+    incidents = [e for e in body["episodes"] if e["kind"] == "one_off"]
+    assert [(e["subcategory"], e["start"], e["end"], e["tickets"]) for e in incidents] == [
+        ("wifi_connectivity", "2024-02-13", "2024-02-13", 52),
+        ("lecture_capture", "2024-09-04", "2024-09-04", 33),
+        ("phishing_report", "2025-03-18", "2025-03-19", 67),
+        ("network_outage", "2025-10-07", "2025-10-07", 40),
+    ]
+    recurring = {d["subcategory"] for d in body["days"] if d["kind"] == "recurring"}
+    assert recurring == {"password_reset", "mfa_issue"}

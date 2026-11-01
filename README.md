@@ -17,7 +17,21 @@ Built so far:
 
 - A FastAPI service (`src/opspilot/api/`) that scores tickets with reasons and serves verified metrics, with a Docker image. See [docs/api.md](docs/api.md).
 
-Not built yet: dashboard, AI insight layer, CI/CD, cloud deployment.
+- A web dashboard served by the API: overview, risk simulator, teams, ticket lookup, incident radar and model evaluation. See [docs/dashboard.md](docs/dashboard.md).
+
+Not built yet: AI insight layer, CI/CD, cloud deployment.
+
+## Dashboard
+
+The data is synthetic, so these numbers show what the system can do, not facts about a real organization.
+
+![Risk simulator: a ticket's chance of missing its SLA, the reasons, and its risk across the day](docs/images/simulator.png)
+
+![Overview: breach rate, ticket volume and breach rate over time](docs/images/overview.png)
+
+![Incident radar: two years of daily volume with suspected incidents marked](docs/images/incidents.png)
+
+![The model: precision, recall and outcomes on the held-out test tickets](docs/images/model.png)
 
 ## Setup
 
@@ -111,7 +125,7 @@ Or run it locally against the database container:
 uvicorn opspilot.api.main:app --port 8000
 ```
 
-Interactive documentation is at http://localhost:8000/docs. Endpoints, examples and limitations are in [docs/api.md](docs/api.md).
+The dashboard is at http://localhost:8000 and interactive API documentation is at http://localhost:8000/docs. Endpoints, examples and limitations are in [docs/api.md](docs/api.md).
 
 ## Notebooks
 

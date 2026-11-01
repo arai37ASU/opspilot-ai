@@ -233,7 +233,8 @@ function drawImportance(charts, card, features) {
     },
     xAxis: { type: "value", min: 0, show: false },
     yAxis: { type: "category", inverse: true, data: top.map((row) => featureLabel(row.feature)), ...axisStyle(colors),
-             axisLine: { show: false }, axisLabel: { ...axisStyle(colors).axisLabel, width: 180, overflow: "truncate" } },
+             axisLine: { show: false }, // Half the chart, so names fit where there is room and truncate on a phone.
+             axisLabel: { ...axisStyle(colors).axisLabel, width: card.chart.clientWidth / 2, overflow: "truncate" } },
     series: [{
       type: "bar", barMaxWidth: 16, data: top.map((row) => row.mean_abs_shap),
       itemStyle: { color: colors.accent, borderRadius: [0, 4, 4, 0] },
@@ -259,10 +260,10 @@ function groupsCard(evaluation) {
       el("h2", {}, "By team and by month"),
       el("p", {}, "The same test results split up, to check the model works for every team and does not decay over time.")),
     el("div", { class: "table-scroll" }, dataTable("By assigned team", ["Team", ...headers.slice(1)],
-      groupRows(evaluation.by_team, (g) => g)),
+      groupRows(evaluation.by_team, (g) => g))),
     serviceDesk && el("p", { class: "chart-note" },
       `Service Desk's tickets breach rarely (${pct(serviceDesk.base_rate, 1)}), so few are flagged and its average `
-      + "precision is the lowest. Average precision depends on how common breaches are, so compare it with the breach rate.")),
+      + "precision is the lowest. Average precision depends on how common breaches are, so compare it with the breach rate."),
     el("details", { class: "table-view" },
       el("summary", {}, "Show by month"),
       el("div", { class: "table-scroll" }, dataTable("By month created", ["Month", ...headers.slice(1)],

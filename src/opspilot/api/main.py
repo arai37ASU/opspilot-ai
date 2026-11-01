@@ -34,6 +34,20 @@ TEST_RESULTS_FILE = "test_results.json"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
+class DashboardFiles(StaticFiles):
+    """Static files the browser must recheck before reusing.
+
+    Without a cache rule, browsers guess how long a file stays fresh and can
+    run old JavaScript after a deploy. "no-cache" still allows caching: an
+    unchanged file comes back as a small 304 response.
+    """
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 def load_model_files(settings: Settings) -> tuple:
     """The fitted pipeline, its metadata, and its test results. Fails at startup
     with an explanation rather than on the first request."""
@@ -73,11 +87,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # The dashboard: one HTML page plus its CSS, JavaScript and chart library,
     # served from the same origin as the API so the browser needs no
     # cross-origin setup.
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount("/static", DashboardFiles(directory=STATIC_DIR), name="static")
 
     @app.get("/", include_in_schema=False)
     def dashboard():
-        return FileResponse(STATIC_DIR / "index.html")
+        return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
     @app.get("/health", response_model=Health, tags=["service"])
     def health(request: Request):

@@ -18,17 +18,19 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# Dependencies first, so code changes do not reinstall them.
-COPY pyproject.toml README.md ./
-COPY src ./src
+# Dependencies first, against an empty stub of the package and README, so a
+# code change does not reinstall them. The real code is copied in afterwards.
 # Editable install: the code finds its SQL files relative to the source tree
 # (/app/src -> /app/sql), which a regular install into site-packages would break.
 # XGBoost's Linux package pulls in NVIDIA GPU libraries (about 350 MB) for
 # multi-GPU training; the API only predicts on CPU, and predictions were
 # checked to be identical without them, so they are removed.
-RUN pip install -e ".[api]" \
+COPY pyproject.toml ./
+RUN mkdir -p src/opspilot && touch src/opspilot/__init__.py README.md \
+    && pip install -e ".[api]" \
     && pip list --format=freeze | grep -i '^nvidia-' | cut -d= -f1 | xargs -r pip uninstall -y
 
+COPY src ./src
 COPY sql ./sql
 COPY reports/modeling ./reports/modeling
 

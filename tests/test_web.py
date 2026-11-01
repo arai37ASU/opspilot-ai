@@ -33,6 +33,18 @@ def test_assets_are_served_with_the_right_type(client, path, content_type):
 
 
 @pytest.mark.db
+@pytest.mark.parametrize("path", ["/", "/static/js/app.js"])
+def test_browsers_must_recheck_the_site_so_old_code_is_not_run(client, path):
+    assert client.get(path).headers["cache-control"] == "no-cache"
+
+
+@pytest.mark.db
+def test_unchanged_assets_are_not_sent_again(client):
+    etag = client.get("/static/js/app.js").headers["etag"]
+    assert client.get("/static/js/app.js", headers={"If-None-Match": etag}).status_code == 304
+
+
+@pytest.mark.db
 def test_dashboard_routes_stay_out_of_the_api_docs(client):
     assert "/" not in client.get("/openapi.json").json()["paths"]
 

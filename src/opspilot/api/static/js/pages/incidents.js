@@ -61,7 +61,7 @@ export async function render(container, params) {
         el("section", { class: "card" },
           el("header", { class: "chart-header" },
             el("h2", {}, `${incidents.length} suspected incidents`),
-            el("p", {}, "Issues that spiked once in two years and never came back.")),
+            el("p", {}, "Issues with a single burst in these two years of data.")),
           incidentList)),
       el("section", { class: "card" },
         el("header", { class: "chart-header" },
@@ -100,7 +100,7 @@ export async function render(container, params) {
   function showDay() {
     const row = days.get(selected);
     const spikesToday = spikesOn(selected);
-    const tags = [humanize(row.academic_period), row.is_weekend && "Weekend", row.is_holiday && "Holiday"].filter(Boolean);
+    const tags = [`Academic period: ${humanize(row.academic_period).toLowerCase()}`, row.is_weekend && "Weekend", row.is_holiday && "Holiday"].filter(Boolean);
     replaceChildren(dayPanel,
       el("p", { class: "day-date" }, formatDay(selected)),
       el("p", { class: "field-note" }, tags.join(" · ")),

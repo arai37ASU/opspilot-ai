@@ -11,3 +11,6 @@ CREATE INDEX tickets_team_created_at_idx ON tickets (assigned_team, created_at);
 
 -- Bursts of the same issue (recurring-issue and incident detection).
 CREATE INDEX tickets_subcategory_created_at_idx ON tickets (subcategory, created_at);
+
+-- Finds the tickets behind a similar description.
+CREATE INDEX tickets_description_created_idx ON tickets (description, created_at DESC);

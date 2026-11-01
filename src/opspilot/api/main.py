@@ -27,7 +27,7 @@ from psycopg_pool import ConnectionPool
 from opspilot.ai.briefing import Briefer
 from opspilot.ai.client import build_client
 from opspilot.ai.explain import TicketExplainer
-from opspilot.api import evaluation, insights, metrics, predictions, reference
+from opspilot.api import evaluation, insights, metrics, predictions, reference, similar
 from opspilot.api.schemas import Health, HeldOutMetrics, ModelInfo
 from opspilot.api.settings import Settings
 
@@ -90,6 +90,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(reference.router)
     app.include_router(evaluation.router)
     app.include_router(insights.router)
+    app.include_router(similar.router)
 
     # The dashboard: one HTML page plus its CSS, JavaScript and chart library,
     # served from the same origin as the API so the browser needs no

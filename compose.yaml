@@ -5,7 +5,10 @@
 #   docker compose --profile api up -d    database and API (build the model first)
 services:
   postgres:
-    image: postgres:17
+    # PostgreSQL 17 with the pgvector extension, for similarity search. The Debian
+    # release must match the one that created the data volume: a different C
+    # library can sort text differently and silently break text indexes.
+    image: pgvector/pgvector:pg17-trixie
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}

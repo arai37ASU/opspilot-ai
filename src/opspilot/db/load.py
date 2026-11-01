@@ -66,6 +66,7 @@ def load_dataset(conn: psycopg.Connection, data_dir: Path) -> dict[str, int]:
                 raise RuntimeError(f"{table}: loaded {loaded} rows but {csv_path.name} has {expected}")
             counts[table] = loaded
         conn.execute((SCHEMA_DIR / "002_create_indexes.sql").read_text())
+        conn.execute((SCHEMA_DIR / "003_create_embeddings.sql").read_text())
         conn.execute(FEATURES_FILE.read_text())
         conn.execute("ANALYZE")
     return counts

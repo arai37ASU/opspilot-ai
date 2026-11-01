@@ -1,0 +1,37 @@
+{
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "candidates": 8471,
+  "real_ticket_queries": 1000,
+  "paraphrase_queries": 40,
+  "methods": {
+    "tfidf": {
+      "real_tickets": {
+        "precision_at_5": 0.9424,
+        "top_1": 0.943,
+        "any_in_top_5": 0.953
+      },
+      "paraphrases": {
+        "precision_at_5": 0.69,
+        "top_1": 0.675,
+        "any_in_top_5": 0.7
+      }
+    },
+    "embeddings": {
+      "real_tickets": {
+        "precision_at_5": 0.9432,
+        "top_1": 0.946,
+        "any_in_top_5": 0.954
+      },
+      "paraphrases": {
+        "precision_at_5": 0.925,
+        "top_1": 0.875,
+        "any_in_top_5": 0.975
+      }
+    }
+  },
+  "cutoff": {
+    "min_similarity": 0.72,
+    "paraphrases_kept": 1.0,
+    "off_topic_kept": 0.0
+  }
+}

@@ -99,3 +99,9 @@ def test_every_model_feature_has_a_plain_language_label():
 
     labelled = set(re.findall(r"^  (\w+): \{ label:", (STATIC / "js" / "features.js").read_text(), re.MULTILINE))
     assert labelled == set(FEATURES)
+
+
+def test_the_image_ships_the_embedding_model_the_code_uses():
+    from opspilot.ai.embeddings import EMBEDDING_MODEL
+
+    assert EMBEDDING_MODEL in (STATIC.parents[3] / "Dockerfile").read_text()

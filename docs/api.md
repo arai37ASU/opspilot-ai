@@ -39,6 +39,8 @@ Configuration comes from environment variables: `DATABASE_URL` (required), `OPSP
 | `POST /explanations` | Score a new ticket and explain it in plain language with Claude. Needs `ANTHROPIC_API_KEY`; each call costs money |
 | `POST /tickets/{ticket_id}/explanation` | The same for a stored ticket, using only what was known at creation |
 | `POST /briefings` | A short management briefing for a date range, from the verified metrics. Needs `ANTHROPIC_API_KEY`; each call costs money |
+| `GET /tickets/{ticket_id}/similar` | Earlier tickets with the most similar descriptions, and what happened to them. Runs locally |
+| `POST /similar-tickets` | Past tickets most similar to a description in any wording. Runs locally |
 | `GET /metrics/overview` | Headline KPIs for a date range (`start`, `end`, both optional) |
 | `GET /metrics/teams` | Per-team KPIs for a date range |
 | `GET /metrics/daily` | Volume and breach rate for every day in a date range, with weekend, holiday and academic-period flags |

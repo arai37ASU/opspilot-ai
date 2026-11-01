@@ -11,6 +11,7 @@ import { explanationPanel } from "../explanation.js";
 import { humanize } from "../features.js";
 import { formatDay } from "../format.js";
 import { reasonsCard, riskCard } from "../risk.js";
+import { similarResults } from "../similar.js";
 
 const EXAMPLE_LABELS = {
   caught_breach: "Caught breach",
@@ -45,11 +46,18 @@ export async function render(container, params) {
   const status = el("p", { class: "load-status", role: "status", "aria-live": "polite" });
   const result = el("div", { class: "page-body" });
 
+  const problemInput = el("input", { type: "search", id: "problem-text", maxlength: 500, autocomplete: "off",
+                                     placeholder: "The projector in my lecture hall shows nothing" });
+  const problemResults = el("div", { class: "page-body", "aria-live": "polite" });
+  const problemForm = el("form", { class: "lookup-form problem-form", role: "search" },
+    el("label", { for: "problem-text", class: "field-label" }, "Or describe a problem in your own words"),
+    el("div", { class: "lookup-row" }, problemInput, el("button", { type: "submit", class: "button" }, "Find similar tickets")));
+
   container.append(
     pageHeader("Ticket lookup", "Score a past ticket as the model would have when it arrived, and compare with what actually happened."),
     el("div", { class: "filter-row" }, form,
       el("div", { class: "lookup-examples" }, el("span", { class: "field-label" }, "Examples from the test period"), examples)),
-    status, result);
+    problemForm, problemResults, status, result);
 
   async function lookUp(rawId) {
     const id = rawId.trim().toUpperCase();
@@ -86,15 +94,40 @@ export async function render(container, params) {
     const note = dataNote(ticket, { trainStart, testStart, testEnd });
     if (note) risk.extra.append(el("p", { class: "chart-note" }, note));
 
+    const similar = el("div", { "aria-live": "polite" });
     replaceChildren(result,
       el("div", { class: "sim-layout" },
         ticketFacts(ticket),
-        el("div", { class: "sim-results" }, risk.root, reasons.root)));
+        el("div", { class: "sim-results" }, risk.root, reasons.root)),
+      similar);
+    getJSON(`/tickets/${encodeURIComponent(ticket.ticket_id)}/similar`)
+      .then((found) => replaceChildren(similar, similarResults(found, "Earlier tickets like this one",
+        "The most similar descriptions from before this ticket was created.")))
+      .catch((error) => replaceChildren(similar, el("p", { class: "field-note" }, `Similar tickets are unavailable: ${error.message}`)));
+  }
+
+  async function searchProblem() {
+    const text = problemInput.value.trim();
+    if (text.length < 3) {
+      replaceChildren(problemResults, el("p", { class: "field-note" }, "Describe the problem in a few words."));
+      return;
+    }
+    replaceChildren(problemResults, el("p", { class: "field-note" }, "Searching…"));
+    try {
+      const found = await postJSON("/similar-tickets", { text });
+      replaceChildren(problemResults, similarResults(found, "Tickets like this problem", "Matched on meaning, so the wording does not have to be the same."));
+    } catch (error) {
+      replaceChildren(problemResults, el("p", { class: "field-note" }, `Search failed: ${error.message}`));
+    }
   }
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     lookUp(input.value);
+  });
+  problemForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    searchProblem();
   });
   if (input.value) await lookUp(input.value);
 }

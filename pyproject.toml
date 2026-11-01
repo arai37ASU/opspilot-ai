@@ -41,6 +41,9 @@ api = [
     "uvicorn[standard]>=0.30",
     "psycopg-pool>=3.2",
     "anthropic>=2.0",
+    # Local embeddings on ONNX Runtime: no PyTorch, no second API key, and
+    # ticket text stays on this machine.
+    "fastembed>=0.9",
 ]
 
 [tool.setuptools.packages.find]

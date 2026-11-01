@@ -125,6 +125,14 @@ Or run it locally against the database container:
 uvicorn opspilot.api.main:app --port 8000
 ```
 
+Similar-ticket search needs embeddings of the ticket descriptions. Build them once after loading the data; this runs locally and reruns skip what is already done:
+
+```bash
+python -m opspilot.ai.embed_tickets
+```
+
+Plain-language explanations and briefings need `ANTHROPIC_API_KEY` in `.env`. Without it they say they are off and everything else works.
+
 The dashboard is at http://localhost:8000 and interactive API documentation is at http://localhost:8000/docs. Endpoints, examples and limitations are in [docs/api.md](docs/api.md).
 
 ## Notebooks

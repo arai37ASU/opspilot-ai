@@ -1,0 +1,41 @@
+query,expected
+the beamer in the lecture hall shows nothing when I plug my slides in,projector_display
+my presentation won't come up on the big screen in class,projector_display
+students at the back can't hear me through the room speakers,room_audio
+the microphone in the seminar room is dead,room_audio
+yesterday's lecture recording never showed up for my students,lecture_capture
+the camera that records my class didn't capture anything,lecture_capture
+i can't get into my account because i forgot my login,password_reset
+locked out after too many wrong attempts and need a new passcode,password_reset
+the code on my authenticator app keeps getting rejected,mfa_issue
+i got a new phone and now the two step login doesn't work,mfa_issue
+new hire starts monday and needs a university login,account_provisioning
+please grant me access to the finance shared folder,permission_request
+i need to borrow a laptop for next week's conference,equipment_loan
+how do i set up a mail signature,how_to_question
+my laptop won't power on at all this morning,device_failure
+the screen on my work computer went black and it will not boot,device_failure
+our department needs a replacement desktop for a new employee,new_device_request
+my usb keyboard stopped responding,peripheral_issue
+the mouse on my desk isn't working anymore,peripheral_issue
+the office copier won't print anything,printer_issue
+paper keeps jamming in the third floor printer,printer_issue
+matlab says my license key is not valid when i open it,activation_failure
+our subscription for the statistics package expires next month,license_renewal
+we would like to purchase seats for a design tool,new_license
+there is no internet anywhere in the science building,network_outage
+the whole campus network seems to be down,network_outage
+websites crawl and video calls keep freezing,slow_network
+downloads are painfully sluggish in my office,slow_network
+i can't connect from home to the campus remote access service,vpn_wired_issue
+the ethernet port in my office has no connection,vpn_wired_issue
+my laptop keeps dropping off the eduroam wireless,wifi_connectivity
+can't join the wireless in the dorm,wifi_connectivity
+someone may have seen a spreadsheet of student grades that got emailed to the wrong list,data_exposure
+my antivirus says a trojan was found on my computer,malware_infection
+i got a strange email asking me to click a link and verify my bank details,phishing_report
+i was alerted to a sign in from another country that wasn't me,suspicious_login
+the student portal crashes with an error whenever i submit,application_error
+outlook won't sync my calendar invites,email_calendar
+after last night's windows patch my pc is stuck restarting,os_update_issue
+please put adobe acrobat on my machine,software_install

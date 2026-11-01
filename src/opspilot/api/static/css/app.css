@@ -488,6 +488,13 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 .facts dd { margin: 0; color: var(--text); }
 .risk-extra:empty { display: none; }
 
+.problem-form { margin: var(--space-4) 0 var(--space-3); max-width: 44rem; }
+.problem-form input { flex: 1; width: auto; min-width: 0; font-family: var(--font); }
+.similar-list { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+.similar-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--border); }
+.similar-item a { color: var(--text); }
+.similar-meta { grid-column: 1 / -1; font-size: var(--text-small); color: var(--text-muted); }
+
 /* ---- Model ------------------------------------------------------------ */
 .chart-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .chart-grid .chart { height: 280px; }

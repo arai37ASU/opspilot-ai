@@ -240,6 +240,35 @@ class Briefing(BaseModel):
     usage: TokenUsage
 
 
+class SimilarSearch(BaseModel):
+    text: str = Field(min_length=3, max_length=500, description="A description of the problem, in any wording")
+    limit: int = Field(5, ge=1, le=20)
+
+
+class SimilarTicket(BaseModel):
+    ticket_id: str
+    description: str
+    subcategory: str
+    assigned_team: str
+    priority: str
+    created_at: datetime
+    status: str
+    resolution_hours: float | None
+    sla_breached: bool | None
+    similarity: float = Field(description="Cosine similarity of the descriptions: 1 is identical wording or meaning")
+
+
+class SimilarOutcomes(BaseModel):
+    resolved: int
+    breached: int
+    median_resolution_hours: float | None
+
+
+class SimilarTickets(BaseModel):
+    tickets: list[SimilarTicket]
+    outcomes: SimilarOutcomes = Field(description="A handful of tickets: an illustration, not a statistic")
+
+
 class TicketRisk(Prediction):
     ticket_id: str
     created_at: datetime

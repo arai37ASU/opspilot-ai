@@ -30,6 +30,12 @@ RUN mkdir -p src/opspilot && touch src/opspilot/__init__.py README.md \
     && pip install -e ".[api]" \
     && pip list --format=freeze | grep -i '^nvidia-' | cut -d= -f1 | xargs -r pip uninstall -y
 
+# The embedding model ships in the image, so similarity search works offline
+# and the first request does not wait for a download. The name must match
+# EMBEDDING_MODEL in src/opspilot/ai/embeddings.py.
+ENV FASTEMBED_CACHE_PATH=/app/embedding-model
+RUN python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"
+
 COPY src ./src
 COPY sql ./sql
 COPY reports/modeling ./reports/modeling

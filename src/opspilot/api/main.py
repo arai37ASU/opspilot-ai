@@ -3,35 +3,35 @@
 Run locally with:
     uvicorn opspilot.api.main:app --reload
 
-Interactive documentation is served at /docs.
+The dashboard is served at / and interactive API documentation at /docs.
 
 The model and a database connection pool are created once when the app
 starts, not per request: loading the pipeline takes time, and opening a new
 database connection for every request is slow.
+
+This module assembles the app; endpoints live in their own modules
+(predictions, metrics, reference).
 """
 
 import json
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import joblib
-import pandas as pd
 import psycopg
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from psycopg_pool import ConnectionPool
 
-from opspilot.analysis.data import read_sql
-from opspilot.api.schemas import Health, HeldOutMetrics, ModelInfo, Prediction, TicketRequest, TicketRisk
-from opspilot.api import metrics
-from opspilot.api.scoring import score
+from opspilot.api import evaluation, metrics, predictions, reference
+from opspilot.api.schemas import Health, HeldOutMetrics, ModelInfo
 from opspilot.api.settings import Settings
-from opspilot.modeling import config
-from opspilot.modeling.dataset import feature_matrix
-from opspilot.modeling.online_features import InvalidTicket, TicketAtCreation, features_for
 
 MODEL_FILE = "sla_breach_model.joblib"
 METADATA_FILE = "sla_breach_model.json"
 TEST_RESULTS_FILE = "test_results.json"
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
 def load_model_files(settings: Settings) -> tuple:
@@ -50,10 +50,11 @@ def load_model_files(settings: Settings) -> tuple:
 def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        config = settings or Settings.from_env()
-        app.state.model, app.state.metadata, app.state.test_results = load_model_files(config)
+        active = settings or Settings.from_env()
+        app.state.model, app.state.metadata, app.state.test_results = load_model_files(active)
+        app.state.evaluation = evaluation.load_evaluation(active.reports_dir)
         # Autocommit, so read-only requests never leave a transaction open.
-        app.state.pool = ConnectionPool(config.database_url, min_size=1, max_size=config.pool_max_size,
+        app.state.pool = ConnectionPool(active.database_url, min_size=1, max_size=active.pool_max_size,
                                         kwargs={"autocommit": True}, open=True)
         yield
         app.state.pool.close()
@@ -64,7 +65,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+    app.include_router(predictions.router)
     app.include_router(metrics.router)
+    app.include_router(reference.router)
+    app.include_router(evaluation.router)
+
+    # The dashboard: one HTML page plus its CSS, JavaScript and chart library,
+    # served from the same origin as the API so the browser needs no
+    # cross-origin setup.
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def dashboard():
+        return FileResponse(STATIC_DIR / "index.html")
 
     @app.get("/health", response_model=Health, tags=["service"])
     def health(request: Request):
@@ -102,39 +115,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 recall_at_threshold=at_threshold["recall"],
             ),
         )
-
-    @app.post("/predictions", response_model=Prediction, tags=["predictions"],
-              responses={422: {"description": "Invalid input, or a ticket that cannot be scored"}})
-    def predict(ticket: TicketRequest, request: Request):
-        """Score a new ticket at the moment it is created.
-
-        Features that depend on the queue (backlog, recent similar tickets,
-        recent breach rates) are computed from the database as of
-        `created_at`, with the same rules used in training.
-        """
-        state = request.app.state
-        try:
-            with state.pool.connection() as conn:
-                features = features_for(conn, TicketAtCreation(**ticket.model_dump()))
-        except InvalidTicket as error:
-            raise HTTPException(status_code=422, detail=str(error))
-        return score(state.model, state.metadata["threshold"], state.metadata["model"], features)
-
-    @app.get("/tickets/{ticket_id}/risk", response_model=TicketRisk, tags=["predictions"],
-             responses={404: {"description": "No ticket with this id"}})
-    def ticket_risk(ticket_id: str, request: Request):
-        """Score a stored ticket from the features it had when it was created."""
-        state = request.app.state
-        with state.pool.connection() as conn:
-            row = read_sql(conn, "SELECT f.*, t.status FROM ticket_features AS f "
-                                 "JOIN tickets AS t USING (ticket_id) WHERE f.ticket_id = %s", [ticket_id])
-        if row.empty:
-            raise HTTPException(status_code=404, detail=f"ticket {ticket_id!r} not found")
-        prediction = score(state.model, state.metadata["threshold"], state.metadata["model"],
-                           feature_matrix(row[config.FEATURES]))
-        outcome = row["sla_breached"].iloc[0]
-        return {**prediction, "ticket_id": ticket_id, "created_at": row["created_at"].iloc[0].to_pydatetime(),
-                "status": row["status"].iloc[0], "sla_breached": None if outcome is pd.NA else bool(outcome)}
 
     return app
 

@@ -116,8 +116,144 @@ class AnalysisResult(BaseModel):
     rows: list[dict[str, Any]]
 
 
+class BatchRequest(BaseModel):
+    tickets: list[TicketRequest] = Field(min_length=1, max_length=48,
+                                         description="Between 1 and 48 tickets, for example one per hour of a day")
+
+
+class BatchItem(BaseModel):
+    risk: float = Field(ge=0, le=1)
+    flagged: bool
+
+
+class BatchPrediction(BaseModel):
+    threshold: float
+    model: str
+    risks: list[BatchItem] = Field(description="One result per ticket, in the order sent")
+
+
+class DateRange(BaseModel):
+    start: date
+    end: date
+
+
+class TeamRef(BaseModel):
+    team: str
+    agents: int
+
+
+class SubcategoryRef(BaseModel):
+    subcategory: str
+    category: str
+    ticket_type: str
+    owning_team: str = Field(description="The team that normally handles it; assigning another team counts as misrouting")
+    allowed_priorities: list[str] = Field(description="Priorities with an SLA policy for this ticket type")
+
+
+class Reference(BaseModel):
+    date_range: DateRange = Field(description="Tickets can be scored with created_at inside this range")
+    priorities: list[str]
+    requester_types: list[str]
+    channels: list[str]
+    teams: list[TeamRef]
+    subcategories: list[SubcategoryRef]
+    threshold: float
+
+
+class DayPoint(BaseModel):
+    day: date
+    tickets: int
+    breach_rate_pct: float | None
+    academic_period: str
+    is_weekend: bool
+    is_holiday: bool
+
+
 class TicketRisk(Prediction):
     ticket_id: str
     created_at: datetime
     status: str
     sla_breached: bool | None = Field(description="Known outcome, if resolved. Not used by the model; shown for comparison.")
+
+
+class ThresholdResult(BaseModel):
+    share_flagged: float
+    precision: float
+    recall: float
+    true_positives: int
+    false_positives: int
+    false_negatives: int
+    true_negatives: int
+
+
+class ModelScore(BaseModel):
+    name: str
+    selected: bool = Field(description="True for the deployed model; the others are baselines")
+    average_precision: float
+    roc_auc: float
+    brier: float
+
+
+class CapacityPoint(BaseModel):
+    review_share: float = Field(description="Share of tickets the desk reviews")
+    threshold: float
+    precision: float
+    recall: float
+
+
+class CalibrationBand(BaseModel):
+    band: int
+    n: int
+    mean_predicted: float
+    observed_rate: float
+
+
+class FeatureImportance(BaseModel):
+    feature: str
+    mean_abs_shap: float = Field(description="Mean absolute SHAP value on the test tickets, in log-odds")
+    ap_drop_mean: float = Field(description="Drop in average precision when the feature is shuffled")
+    ap_drop_std: float
+
+
+class GroupResult(BaseModel):
+    group: str
+    n: int
+    base_rate: float
+    average_precision: float
+    share_flagged: float
+    precision_at_threshold: float
+    recall_at_threshold: float
+    small_group: bool
+
+
+class ExampleTicket(BaseModel):
+    case: Literal["caught_breach", "false_alarm", "missed_breach"]
+    ticket_id: str
+    predicted_risk: float
+    breached: bool
+
+
+class ModelEvaluation(BaseModel):
+    model: str
+    threshold: float
+    train_period: list[str]
+    test_period: list[str] = Field(description="Tickets created in this period were never used for training or model choice")
+    train_tickets: int
+    test_tickets: int
+    base_rate: float = Field(description="Share of test tickets that breached")
+    average_precision: float
+    roc_auc: float
+    brier: float
+    expected_calibration_error: float
+    intervals_95: dict[str, list[float]] = Field(description="Bootstrap 95% intervals on the test tickets")
+    at_threshold: ThresholdResult
+    comparison: list[ModelScore] = Field(description="The deployed model and the baselines, on the same test tickets")
+    capacity_curve: list[CapacityPoint] = Field(description="From the validation folds, where the threshold was chosen")
+    calibration: list[CalibrationBand] = Field(description="Test tickets in ten equal-size bands of predicted risk")
+    feature_importance: list[FeatureImportance]
+    by_team: list[GroupResult]
+    by_month: list[GroupResult]
+    examples: list[ExampleTicket] = Field(description="The most confident caught breach, false alarm and missed breach in the test period")
+    evaluated_at: str
+    commit: str
+    versions: dict[str, str]

@@ -17,7 +17,7 @@ import psycopg
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from opspilot.analysis.data import read_sql
-from opspilot.api.schemas import AnalysisQuery, AnalysisResult, MonthPoint, Overview, Teams
+from opspilot.api.schemas import AnalysisQuery, AnalysisResult, DayPoint, MonthPoint, Overview, Teams
 from opspilot.db.analysis import analysis_queries
 from opspilot.db.sql_files import parse_named_queries
 
@@ -71,11 +71,23 @@ def teams(request: Request, start: date | None = Query(None), end: date | None =
     return {"start": start, "end": end, "teams": rows}
 
 
-@router.get("/trend", response_model=list[MonthPoint])
-def trend(request: Request):
-    """Monthly ticket volume and breach rate across the whole dataset."""
+@router.get("/daily", response_model=list[DayPoint])
+def daily(request: Request, start: date | None = Query(None), end: date | None = Query(None)):
+    """Ticket volume and breach rate for every day in the range, including days with no tickets."""
     with request.app.state.pool.connection() as conn:
-        return records(read_sql(conn, METRICS_SQL["monthly_trend"]))
+        start, end = date_range(conn, start, end)
+        return records(read_sql(conn, METRICS_SQL["daily"], {"start": start, "end": end}))
+
+
+@router.get("/trend", response_model=list[MonthPoint])
+def trend(request: Request, start: date | None = Query(None), end: date | None = Query(None)):
+    """Monthly ticket volume and breach rate for the date range (default: all data).
+
+    Months cut by the range count only the days inside it.
+    """
+    with request.app.state.pool.connection() as conn:
+        start, end = date_range(conn, start, end)
+        return records(read_sql(conn, METRICS_SQL["monthly_trend"], {"start": start, "end": end}))
 
 
 @router.get("/analysis", response_model=list[AnalysisQuery])

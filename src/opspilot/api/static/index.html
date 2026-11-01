@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpsPilot Control Room</title>
+  <meta name="description" content="SLA breach risk and operational metrics for a university IT service desk (synthetic data).">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script>
+    // Apply a saved theme before the page paints, so it does not flash.
+    try {
+      const saved = localStorage.getItem("opspilot-theme");
+      if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+    } catch (error) { /* storage unavailable: follow the system setting */ }
+  </script>
+  <script src="/static/vendor/echarts-5.6.0.min.js" defer></script>
+  <script src="/static/js/app.js" type="module"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <a class="brand" href="#/overview" aria-label="OpsPilot home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2.5"/>
+        <path d="M16 16 L23 9" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="16" cy="16" r="2.6" fill="currentColor"/>
+      </svg>
+      <span class="brand-name">OpsPilot</span>
+      <span class="brand-tag">control room</span>
+    </a>
+
+    <nav class="nav" aria-label="Pages">
+      <ul id="nav-links"></ul>
+    </nav>
+
+    <div class="topbar-tools">
+      <span id="api-status" class="status-pill" role="status" aria-live="polite">Connecting…</span>
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch colour theme">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="page" tabindex="-1"></main>
+
+  <footer class="footer">
+    <p>Synthetic data for a fictional university service desk. Numbers come from the OpsPilot API;
+      the page calculates none itself. <a href="/docs">API documentation</a></p>
+  </footer>
+</body>
+</html>

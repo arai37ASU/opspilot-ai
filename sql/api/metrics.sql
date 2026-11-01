@@ -69,11 +69,30 @@ LEFT JOIN resolved AS r USING (team)
 ORDER BY r.breach_rate_pct DESC NULLS LAST;
 
 
+-- name: daily
+-- Every calendar day in the range, including days with no tickets, which a
+-- calendar view needs to show as empty rather than missing.
+SELECT
+    c.day,
+    count(t.ticket_id)                       AS tickets,
+    round(100 * avg(t.sla_breached::int), 1) AS breach_rate_pct,
+    c.academic_period,
+    c.is_weekend,
+    c.is_holiday
+FROM calendar_days AS c
+LEFT JOIN tickets AS t ON t.created_at::date = c.day
+WHERE c.day BETWEEN %(start)s AND %(end)s
+GROUP BY c.day, c.academic_period, c.is_weekend, c.is_holiday
+ORDER BY c.day;
+
+
 -- name: monthly_trend
+-- A month at either end of the range only counts the days inside it.
 SELECT
     date_trunc('month', created_at)::date AS month,
     count(*)                              AS tickets,
     round(100 * avg(sla_breached::int), 1) AS breach_rate_pct
 FROM tickets
+WHERE created_at::date BETWEEN %(start)s AND %(end)s
 GROUP BY 1
 ORDER BY 1;

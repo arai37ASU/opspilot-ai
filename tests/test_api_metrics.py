@@ -59,6 +59,14 @@ def test_date_filter_narrows_the_results(client):
     assert one_month["tickets"] == trend["2025-09-01"]["tickets"]
 
 
+def test_trend_counts_only_days_inside_the_range(client):
+    """A range starting mid-month must not report the whole of that month."""
+    trend = client.get("/metrics/trend", params={"start": "2025-09-15", "end": "2025-10-31"}).json()
+    daily = client.get("/metrics/daily", params={"start": "2025-09-15", "end": "2025-09-30"}).json()
+    assert [row["month"] for row in trend] == ["2025-09-01", "2025-10-01"]
+    assert trend[0]["tickets"] == sum(day["tickets"] for day in daily)
+
+
 def test_an_empty_range_returns_zeros_not_an_error(client):
     body = client.get("/metrics/overview", params={"start": "2030-01-01", "end": "2030-01-31"}).json()
     assert body["tickets"] == 0

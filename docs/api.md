@@ -29,12 +29,17 @@ Configuration comes from environment variables: `DATABASE_URL` (required), `OPSP
 | Method and path | Purpose |
 |---|---|
 | `GET /health` | 200 when the database answers and the model is loaded; 503 otherwise |
+| `GET /` | The dashboard (a static web app served from `src/opspilot/api/static`) |
 | `GET /model` | The deployed model, its threshold and features, the commit it was evaluated from, and its test metrics |
+| `GET /model/evaluation` | The saved test evaluation in full: confusion counts, intervals, baselines, calibration, the review-capacity curve, feature importance, results by team and month, example tickets. Read from `reports/modeling`, never recomputed |
+| `GET /reference` | The options a ticket can be scored with: date range, priorities, channels, teams, and issues with their owning team and allowed priorities |
 | `POST /predictions` | Score a new ticket at creation time |
+| `POST /predictions/batch` | Score 1 to 48 new tickets in one request, without reasons (for example one ticket at every half hour of a day) |
 | `GET /tickets/{ticket_id}/risk` | Score a stored ticket from the features it had at creation |
 | `GET /metrics/overview` | Headline KPIs for a date range (`start`, `end`, both optional) |
 | `GET /metrics/teams` | Per-team KPIs for a date range |
-| `GET /metrics/trend` | Monthly volume and breach rate |
+| `GET /metrics/daily` | Volume and breach rate for every day in a date range, with weekend, holiday and academic-period flags |
+| `GET /metrics/trend` | Monthly volume and breach rate for a date range |
 | `GET /metrics/analysis` | The catalog of saved analysis queries |
 | `GET /metrics/analysis/{file}/{query}` | The rows of one analysis query |
 

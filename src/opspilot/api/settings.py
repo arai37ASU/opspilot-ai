@@ -13,6 +13,7 @@ class Settings:
     model_dir: Path  # fitted pipeline and its metadata, from opspilot.modeling.train
     reports_dir: Path  # saved evaluation results, from the modeling commands
     pool_max_size: int = 5
+    ai_model: str = "claude-opus-5-5"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -21,4 +22,5 @@ class Settings:
             model_dir=Path(os.environ.get("OPSPILOT_MODEL_DIR", "models")),
             reports_dir=Path(os.environ.get("OPSPILOT_REPORTS_DIR", "reports/modeling")),
             pool_max_size=int(os.environ.get("OPSPILOT_POOL_MAX_SIZE", "5")),
+            ai_model=os.environ.get("OPSPILOT_AI_MODEL", cls.ai_model),
         )

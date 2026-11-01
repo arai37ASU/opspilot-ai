@@ -9,6 +9,7 @@
 import { getJSON, postJSON } from "../api.js";
 import { axisStyle, chartCard, drawChart, escapeHtml, fillTable, tooltipStyle } from "../charts.js";
 import { el, pageHeader, replaceChildren } from "../dom.js";
+import { explanationPanel } from "../explanation.js";
 import { humanize } from "../features.js";
 import { formatDay } from "../format.js";
 import { percentLabel, reasonsCard, riskCard } from "../risk.js";
@@ -82,6 +83,8 @@ export async function render(container, params) {
   // ---- Results ----
   const risk = riskCard(threshold);
   const reasons = reasonsCard();
+  const explanation = explanationPanel(() => postJSON("/explanations", toRequest(ticket, ticket.time)));
+  reasons.root.append(explanation.root);
   const thresholdPercent = percentLabel(threshold);
 
   const dayCard = chartCard("Risk across the day",
@@ -134,6 +137,7 @@ export async function render(container, params) {
   // "time" means only the slider moved, so the day curve is still valid.
   function changed(what) {
     syncControls();
+    explanation.reset();
     history.replaceState(null, "", `#/simulator?${new URLSearchParams(ticket)}`);
     if (what === "time") {
       showFromDay();

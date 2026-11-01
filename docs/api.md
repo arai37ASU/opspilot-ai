@@ -36,6 +36,8 @@ Configuration comes from environment variables: `DATABASE_URL` (required), `OPSP
 | `POST /predictions` | Score a new ticket at creation time |
 | `POST /predictions/batch` | Score 1 to 48 new tickets in one request, without reasons (for example one ticket at every half hour of a day) |
 | `GET /tickets/{ticket_id}/risk` | Score a stored ticket from the features it had at creation |
+| `POST /explanations` | Score a new ticket and explain it in plain language with Claude. Needs `ANTHROPIC_API_KEY`; each call costs money |
+| `POST /tickets/{ticket_id}/explanation` | The same for a stored ticket, using only what was known at creation |
 | `GET /metrics/overview` | Headline KPIs for a date range (`start`, `end`, both optional) |
 | `GET /metrics/teams` | Per-team KPIs for a date range |
 | `GET /metrics/daily` | Volume and breach rate for every day in a date range, with weekend, holiday and academic-period flags |
@@ -67,7 +69,7 @@ Features that depend on the queue (backlog, recent similar tickets, recent breac
 |---|---|
 | 404 | Unknown ticket id or analysis query |
 | 422 | A field is missing or invalid (for example `priority: "P9"`), or the ticket cannot be scored: unknown subcategory or team, a priority with no SLA policy (P1 service requests), a date outside the data, or a date range with `start` after `end` |
-| 503 | From `/health`, when the database is unreachable |
+| 503 | From `/health`, when the database is unreachable. From the explanation endpoints, when no API key is set, the AI service fails, or no draft passes the number check |
 
 ## Design notes
 

@@ -194,6 +194,31 @@ class Spikes(BaseModel):
     episodes: list[SpikeEpisode]
 
 
+class ExplainedReason(BaseModel):
+    feature: str
+    label: str
+    value: str
+    direction: Literal["raises risk", "lowers risk"]
+    note: str = Field(description="Written by Claude; the other fields come from the model")
+
+
+class TokenUsage(BaseModel):
+    input_tokens: int
+    output_tokens: int
+
+
+class Explanation(BaseModel):
+    summary: str = Field(description="Written by Claude and checked: every number must appear in the facts")
+    reasons: list[ExplainedReason]
+    suggested_action: str
+    risk: float = Field(ge=0, le=1, description="From the model, not from Claude")
+    flagged: bool
+    threshold: float
+    model: str = Field(description="The Claude model that wrote the text")
+    attempts: int = Field(description="Requests needed to get a draft that passed the checks")
+    usage: TokenUsage
+
+
 class TicketRisk(Prediction):
     ticket_id: str
     created_at: datetime

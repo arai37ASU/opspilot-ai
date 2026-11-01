@@ -13,6 +13,30 @@ from opspilot.modeling.online_features import InvalidTicket, TicketAtCreation, f
 router = APIRouter(tags=["predictions"])
 
 
+def score_new_ticket(ticket: TicketRequest, request: Request) -> dict:
+    state = request.app.state
+    try:
+        with state.pool.connection() as conn:
+            features = features_for(conn, TicketAtCreation(**ticket.model_dump()))
+    except InvalidTicket as error:
+        raise HTTPException(status_code=422, detail=str(error))
+    return score(state.model, state.metadata["threshold"], state.metadata["model"], features)
+
+
+def score_stored_ticket(ticket_id: str, request: Request) -> dict:
+    state = request.app.state
+    with state.pool.connection() as conn:
+        row = read_sql(conn, "SELECT f.*, t.status FROM ticket_features AS f "
+                             "JOIN tickets AS t USING (ticket_id) WHERE f.ticket_id = %s", [ticket_id])
+    if row.empty:
+        raise HTTPException(status_code=404, detail=f"ticket {ticket_id!r} not found")
+    prediction = score(state.model, state.metadata["threshold"], state.metadata["model"],
+                       feature_matrix(row[config.FEATURES]))
+    outcome = row["sla_breached"].iloc[0]
+    return {**prediction, "ticket_id": ticket_id, "created_at": row["created_at"].iloc[0].to_pydatetime(),
+            "status": row["status"].iloc[0], "sla_breached": None if outcome is pd.NA else bool(outcome)}
+
+
 @router.post("/predictions", response_model=Prediction,
              responses={422: {"description": "Invalid input, or a ticket that cannot be scored"}})
 def predict(ticket: TicketRequest, request: Request):
@@ -22,13 +46,7 @@ def predict(ticket: TicketRequest, request: Request):
     recent breach rates) are computed from the database as of `created_at`,
     with the same rules used in training.
     """
-    state = request.app.state
-    try:
-        with state.pool.connection() as conn:
-            features = features_for(conn, TicketAtCreation(**ticket.model_dump()))
-    except InvalidTicket as error:
-        raise HTTPException(status_code=422, detail=str(error))
-    return score(state.model, state.metadata["threshold"], state.metadata["model"], features)
+    return score_new_ticket(ticket, request)
 
 
 @router.post("/predictions/batch", response_model=BatchPrediction,
@@ -58,14 +76,4 @@ def predict_batch(batch: BatchRequest, request: Request):
             responses={404: {"description": "No ticket with this id"}})
 def ticket_risk(ticket_id: str, request: Request):
     """Score a stored ticket from the features it had when it was created."""
-    state = request.app.state
-    with state.pool.connection() as conn:
-        row = read_sql(conn, "SELECT f.*, t.status FROM ticket_features AS f "
-                             "JOIN tickets AS t USING (ticket_id) WHERE f.ticket_id = %s", [ticket_id])
-    if row.empty:
-        raise HTTPException(status_code=404, detail=f"ticket {ticket_id!r} not found")
-    prediction = score(state.model, state.metadata["threshold"], state.metadata["model"],
-                       feature_matrix(row[config.FEATURES]))
-    outcome = row["sla_breached"].iloc[0]
-    return {**prediction, "ticket_id": ticket_id, "created_at": row["created_at"].iloc[0].to_pydatetime(),
-            "status": row["status"].iloc[0], "sla_breached": None if outcome is pd.NA else bool(outcome)}
+    return score_stored_ticket(ticket_id, request)

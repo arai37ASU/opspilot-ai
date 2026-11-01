@@ -5,8 +5,9 @@
 // their scores are more confident than a new ticket's would be. The page
 // says so whenever that applies.
 
-import { ApiError, getJSON } from "../api.js";
+import { ApiError, getJSON, postJSON } from "../api.js";
 import { el, pageHeader, replaceChildren } from "../dom.js";
+import { explanationPanel } from "../explanation.js";
 import { humanize } from "../features.js";
 import { formatDay } from "../format.js";
 import { reasonsCard, riskCard } from "../risk.js";
@@ -79,6 +80,8 @@ export async function render(container, params) {
     const reasons = reasonsCard();
     risk.show(ticket.risk, ticket.flagged);
     reasons.show(ticket);
+    reasons.root.append(explanationPanel(() =>
+      postJSON(`/tickets/${encodeURIComponent(ticket.ticket_id)}/explanation`)).root);
 
     const note = dataNote(ticket, { trainStart, testStart, testEnd });
     if (note) risk.extra.append(el("p", { class: "chart-note" }, note));

@@ -1,15 +1,17 @@
 """TicketExplainer, with a fake Claude client: no network and no cost."""
 
 from datetime import datetime
-from types import SimpleNamespace
 
 import anthropic
 import httpx2
 import pytest
 
-from opspilot.ai.explain import Draft, ExplanationUnavailable, ReasonNote, TicketExplainer, draft_problems
+from opspilot.ai.client import AIUnavailable
+from opspilot.ai.explain import Draft, ReasonNote, TicketExplainer, draft_problems
 from opspilot.ai.facts import FEATURES, risk_label, ticket_facts
 from opspilot.modeling.config import FEATURES as MODEL_FEATURES
+
+from conftest import FakeClient, reply
 
 CREATED = datetime(2025, 9, 3, 19, 30)
 PREDICTION = {
@@ -28,27 +30,6 @@ FEATURE_NAMES = [reason["feature"] for reason in PREDICTION["reasons"]]
 def draft(summary="Risk is 98%, mostly because the team is away.", features=FEATURE_NAMES):
     return Draft(summary=summary, suggested_action="Review it first thing tomorrow.",
                  reasons=[ReasonNote(feature=name, note="This matters here.") for name in features])
-
-
-class FakeClient:
-    """Stands in for anthropic.Anthropic: returns queued outcomes and records requests."""
-
-    def __init__(self, *outcomes):
-        self.outcomes = list(outcomes)
-        self.requests = []
-        self.beta = SimpleNamespace(messages=SimpleNamespace(parse=self.parse))
-
-    def parse(self, **request):
-        self.requests.append(request)
-        outcome = self.outcomes.pop(0)
-        if isinstance(outcome, Exception):
-            raise outcome
-        return outcome
-
-
-def reply(parsed, stop_reason="end_turn"):
-    return SimpleNamespace(parsed_output=parsed, stop_reason=stop_reason, model="claude-test",
-                           usage=SimpleNamespace(input_tokens=100, output_tokens=40))
 
 
 def explainer(*outcomes, model="claude-opus-5-5"):
@@ -82,7 +63,7 @@ def test_a_rejected_draft_is_retried_with_the_problem_named():
 
 def test_unverified_text_is_never_returned():
     service, client = explainer(reply(draft("Risk is 91%.")), reply(draft("Risk is 92%.")))
-    with pytest.raises(ExplanationUnavailable, match="number check"):
+    with pytest.raises(AIUnavailable, match="number check"):
         service.explain(PREDICTION, CREATED)
     assert len(client.requests) == 2
 
@@ -97,7 +78,7 @@ def test_a_draft_must_cover_the_real_reasons_in_order():
 
 @pytest.mark.parametrize("stop_reason", ["refusal", "max_tokens"])
 def test_an_incomplete_reply_is_not_shown(stop_reason):
-    with pytest.raises(ExplanationUnavailable):
+    with pytest.raises(AIUnavailable):
         explainer(reply(draft(), stop_reason=stop_reason))[0].explain(PREDICTION, CREATED)
 
 
@@ -113,7 +94,7 @@ def status_error(kind, status):
     (anthropic.APIConnectionError(request=httpx2.Request("POST", "https://api.anthropic.com")), "could not be reached"),
 ])
 def test_api_failures_become_a_safe_message(error, message):
-    with pytest.raises(ExplanationUnavailable, match=message):
+    with pytest.raises(AIUnavailable, match=message):
         explainer(error)[0].explain(PREDICTION, CREATED)
 
 

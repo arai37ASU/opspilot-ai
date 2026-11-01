@@ -24,7 +24,9 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from psycopg_pool import ConnectionPool
 
-from opspilot.ai.explain import build_explainer
+from opspilot.ai.briefing import Briefer
+from opspilot.ai.client import build_client
+from opspilot.ai.explain import TicketExplainer
 from opspilot.api import evaluation, insights, metrics, predictions, reference
 from opspilot.api.schemas import Health, HeldOutMetrics, ModelInfo
 from opspilot.api.settings import Settings
@@ -68,7 +70,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         active = settings or Settings.from_env()
         app.state.model, app.state.metadata, app.state.test_results = load_model_files(active)
         app.state.evaluation = evaluation.load_evaluation(active.reports_dir)
-        app.state.explainer = build_explainer(active.ai_model)
+        client = build_client()
+        app.state.explainer = TicketExplainer(client, active.ai_model) if client else None
+        app.state.briefer = Briefer(client, active.ai_model) if client else None
         # Autocommit, so read-only requests never leave a transaction open.
         app.state.pool = ConnectionPool(active.database_url, min_size=1, max_size=active.pool_max_size,
                                         kwargs={"autocommit": True}, open=True)

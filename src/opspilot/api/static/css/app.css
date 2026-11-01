@@ -277,7 +277,7 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 }
 .preset:hover { color: var(--text); background: var(--surface-2); }
 .preset[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
-.date-fields { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-small); color: var(--text-muted); }
+.date-fields { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--text-small); color: var(--text-muted); }
 .date-fields input {
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--border);
@@ -430,6 +430,11 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 .card .explanation-summary, .card .explanation-action { color: var(--text); }
 .explanation-reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
 .button:disabled { opacity: 0.5; cursor: progress; }
+
+.card .briefing-headline { color: var(--text); font-size: var(--text-large); font-weight: 600; }
+.briefing-findings { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.briefing-actions { margin: var(--space-1) 0 0; padding-left: var(--space-5); color: var(--text); }
+.briefing-card .explanation { margin-top: var(--space-3); padding-top: 0; border-top: 0; }
 
 /* ---- Teams ------------------------------------------------------------ */
 .small-multiples { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }

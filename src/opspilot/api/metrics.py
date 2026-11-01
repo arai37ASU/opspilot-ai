@@ -53,16 +53,29 @@ def date_range(conn: psycopg.Connection, start: date | None, end: date | None) -
     return start, end
 
 
+def period_overview(conn: psycopg.Connection, start: date, end: date) -> dict:
+    params = {"start": start, "end": end}
+    totals = records(read_sql(conn, METRICS_SQL["overview"], params))[0]
+    by_priority = records(read_sql(conn, METRICS_SQL["by_priority"], params))
+    return {"start": start, "end": end, **totals, "by_priority": by_priority}
+
+
+def period_teams(conn: psycopg.Connection, start: date, end: date) -> list[dict]:
+    return records(read_sql(conn, METRICS_SQL["by_team"], {"start": start, "end": end}))
+
+
+def all_spikes(conn: psycopg.Connection) -> tuple[list[dict], list[dict]]:
+    query = ANALYSIS["08_recurring_issue_spikes"]["daily_spikes"]
+    return group_spikes(records(read_sql(conn, query.sql)))
+
+
 @router.get("/overview", response_model=Overview)
 def overview(request: Request, start: date | None = Query(None, description="First creation date, inclusive"),
              end: date | None = Query(None, description="Last creation date, inclusive")):
     """Headline KPIs for tickets created in the date range (default: all data)."""
     with request.app.state.pool.connection() as conn:
         start, end = date_range(conn, start, end)
-        params = {"start": start, "end": end}
-        totals = records(read_sql(conn, METRICS_SQL["overview"], params))[0]
-        by_priority = records(read_sql(conn, METRICS_SQL["by_priority"], params))
-    return {"start": start, "end": end, **totals, "by_priority": by_priority}
+        return period_overview(conn, start, end)
 
 
 @router.get("/teams", response_model=Teams)
@@ -70,8 +83,7 @@ def teams(request: Request, start: date | None = Query(None), end: date | None =
     """Per-team volume, breach rate, resolution time and misrouting for the date range."""
     with request.app.state.pool.connection() as conn:
         start, end = date_range(conn, start, end)
-        rows = records(read_sql(conn, METRICS_SQL["by_team"], {"start": start, "end": end}))
-    return {"start": start, "end": end, "teams": rows}
+        return {"start": start, "end": end, "teams": period_teams(conn, start, end)}
 
 
 @router.get("/daily", response_model=list[DayPoint])
@@ -129,9 +141,8 @@ def spikes(request: Request):
 
     One-off episodes are suspected incidents, inferred from ticket data alone.
     """
-    query = ANALYSIS["08_recurring_issue_spikes"]["daily_spikes"]
     with request.app.state.pool.connection() as conn:
-        days, episodes = group_spikes(records(read_sql(conn, query.sql)))
+        days, episodes = all_spikes(conn)
     return {"days": days, "episodes": episodes}
 
 

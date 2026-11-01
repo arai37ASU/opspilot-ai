@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 import joblib
 import psycopg
@@ -9,6 +10,27 @@ import pytest
 from opspilot.data_generation.generate import write_dataset
 from opspilot.db import connection  # noqa: F401  (loads .env)
 from opspilot.db.load import load_dataset
+
+
+class FakeClient:
+    """Stands in for anthropic.Anthropic: returns queued outcomes and records requests."""
+
+    def __init__(self, *outcomes):
+        self.outcomes = list(outcomes)
+        self.requests = []
+        self.beta = SimpleNamespace(messages=SimpleNamespace(parse=self.parse))
+
+    def parse(self, **request):
+        self.requests.append(request)
+        outcome = self.outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+
+def reply(parsed, stop_reason="end_turn"):
+    return SimpleNamespace(parsed_output=parsed, stop_reason=stop_reason, model="claude-test",
+                           usage=SimpleNamespace(input_tokens=100, output_tokens=40))
 
 
 @pytest.fixture(scope="session")

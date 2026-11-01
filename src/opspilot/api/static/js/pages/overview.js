@@ -5,9 +5,10 @@
 // a shared time axis rather than one chart with two y-axes, which would
 // suggest a relationship the data does not show.
 
-import { getJSON } from "../api.js";
+import { getJSON, postJSON } from "../api.js";
 import { TIME_GRID, axisStyle, chartCard, drawChart, escapeHtml, fillTable, tooltipStyle } from "../charts.js";
 import { el, pageHeader, replaceChildren } from "../dom.js";
+import { briefingPanel } from "../explanation.js";
 import { dateRangeFilter } from "../filters.js";
 import {
   CENSORING_DAYS, daysBetween, formatCompact, formatDay, formatHours, formatInteger, formatMonth,
@@ -31,8 +32,13 @@ export async function render(container, params) {
   const kpis = el("section", { class: "kpi-row", "aria-label": "Headline numbers" });
   const volumeCard = chartCard("Tickets created", "Volume over the selected period.");
   const breachCard = chartCard("SLA breach rate", "Share of resolved tickets that missed their target, on the same time axis.");
-  const priorityCard = chartCard("Breach rate by priority", "Higher priorities have tighter targets, so they breach more often.");
-  const body = el("div", { class: "page-body" }, kpis, volumeCard.root, breachCard.root, priorityCard.root);
+  const priorityCard = chartCard("Breach rate by priority", "P2 tickets breach most often. P1 tickets have the tightest targets, but they get on-call cover and are worked fastest.");
+  const briefing = briefingPanel(() => postJSON("/briefings", { start: range.start, end: range.end }));
+  const briefingCard = el("section", { class: "card briefing-card" },
+    el("h2", {}, "Management briefing"),
+    el("p", {}, "A short written summary of the selected period. Written by AI on request, from the numbers on this page."),
+    briefing.root);
+  const body = el("div", { class: "page-body" }, kpis, briefingCard, volumeCard.root, breachCard.root, priorityCard.root);
 
   container.append(
     pageHeader("Overview", "How the service desk is doing: volume, SLA breaches and resolution times for any period."),
@@ -41,6 +47,7 @@ export async function render(container, params) {
   const charts = {};
 
   async function load() {
+    briefing.reset();
     body.classList.add("is-loading");
     status.textContent = "Loading…";
     const query = `start=${range.start}&end=${range.end}`;

@@ -219,6 +219,27 @@ class Explanation(BaseModel):
     usage: TokenUsage
 
 
+class BriefingRequest(BaseModel):
+    start: date
+    end: date
+
+
+class BriefingFinding(BaseModel):
+    text: str
+    sources: list[str] = Field(description="The facts sections this finding uses; its numbers are checked against them")
+
+
+class Briefing(BaseModel):
+    headline: str
+    findings: list[BriefingFinding]
+    actions: list[str]
+    caveats: list[str] = Field(description="Written by code, not Claude")
+    facts: dict[str, Any] = Field(description="Exactly what Claude was given")
+    model: str
+    attempts: int
+    usage: TokenUsage
+
+
 class TicketRisk(Prediction):
     ticket_id: str
     created_at: datetime

@@ -99,3 +99,12 @@ def test_briefer_retries_a_rejected_draft_with_the_problem_named():
     result = Briefer(client, "claude-test").brief(facts())
     assert result["attempts"] == 2
     assert "'99%'" in client.requests[1]["messages"][0]["content"]
+
+
+def test_caveats_do_not_contradict_each_other():
+    from opspilot.ai.briefing import caveats_for
+
+    no_comparison = caveats_for(LAST_DAY, LAST_DAY, has_comparison=False)
+    assert len(no_comparison) == 2
+    assert not any("not compared with last year" in caveat for caveat in no_comparison)
+    assert any("not compared with last year" in caveat for caveat in caveats_for(LAST_DAY, LAST_DAY, has_comparison=True))

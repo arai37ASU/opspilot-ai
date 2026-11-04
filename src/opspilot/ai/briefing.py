@@ -127,9 +127,10 @@ def _spikes_in(days: list[dict], episodes: list[dict], start: date, end: date) -
 def caveats_for(end: date, last_day: date, has_comparison: bool) -> list[str]:
     caveats = []
     if (last_day - end).days < CENSORING_DAYS:
-        caveats.append(f"Tickets from the last {CENSORING_DAYS} days of the data were often still open at the "
-                       "snapshot, so this period's breach rate reads lower than the final figure would be. It is "
-                       "not compared with last year for that reason.")
+        caveat = (f"Tickets from the last {CENSORING_DAYS} days of the data were often still open at the snapshot, "
+                  "so this period's breach rate reads lower than the final figure would be.")
+        # Only say why the rate is not compared when there is a comparison to leave it out of.
+        caveats.append(caveat + (" It is not compared with last year for that reason." if has_comparison else ""))
     if not has_comparison:
         caveats.append("There is no comparison because the data does not cover the same dates a year earlier.")
     return caveats
